@@ -1,0 +1,41 @@
+
+var express = require('express');
+var httpClient = require('request');
+var bodyParser = require('body-parser');
+var path = require('path');
+var fs = require('fs');
+var app = express();
+var questionsService = require('./questions-service');
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded())
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'static'))); // get references to the html's
+
+app.get('/prosperquiz/questions', function(request, response) {
+    console.log("New request received to /prosperquiz/questions");
+    var questionNumber = request.query.number;
+    if ( questionNumber ) {
+        return response.status(200).json(
+            questionsService.getQuestion(questionNumber)
+        );
+    } else {
+        return response.status(422).json({"error": "Provide a question number"});
+    }
+});
+
+var questionHtml = fs.readFileSync('static/question.html');
+
+app.get('/prosperquiz', function(request, response) {
+    console.log("New request received to /prosperquiz");
+    response.setHeader('Content-Type', 'text/html');
+    var startQuestion = request.query.start;
+    if ( startQuestion ) {
+        response.setHeader("Start-Question", startQuestion);
+    }
+    response.status(200).end(questionHtml);
+});
+
+var portNumber = 34343;
+app.listen(portNumber);
+console.log('Listening on port '+portNumber+'...');

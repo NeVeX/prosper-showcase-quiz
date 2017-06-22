@@ -1,0 +1,12 @@
+{
+  "name": "nameless-prosper-slack",
+  "description": "Nameless / command for anonymous comments in slack",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "express": "4.15.3",
+    "request": "2.81.0",
+    "body-parser": "1.17.2",
+    "path": "0.12.7"
+  }
+}
