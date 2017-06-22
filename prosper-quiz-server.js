@@ -8,7 +8,7 @@ var app = express();
 var questionsService = require('./questions-service');
 
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded())
+app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'static'))); // get references to the html's
 
@@ -16,8 +16,8 @@ app.get('/prosperquiz/questions', function(request, response) {
     console.log("New request received to /prosperquiz/questions");
     var questionNumber = request.query.number;
     if ( questionNumber ) {
-
-        var questionToReturn = questionsService.getQuestion(questionNumber);
+        var questionChangeKey = request.query["key"];
+        var questionToReturn = questionsService.getQuestion(questionNumber, questionChangeKey);
         if ( questionToReturn) { 
             return response.status(200).json(questionToReturn);
         } else {
@@ -34,9 +34,10 @@ app.get('/prosperquiz', function(request, response) {
     console.log("New GET request received to /prosperquiz");
     response.setHeader('Content-Type', 'text/html');
     var startQuestion = request.query.start;
-    if ( startQuestion ) {
-        response.setHeader("Start-Question", startQuestion);
+    if ( !startQuestion ) {
+        startQuestion = 1;
     }
+    response.setHeader("Start-Question", startQuestion);
     response.status(200).end(questionHtml);
 });
 
@@ -45,9 +46,9 @@ app.post('/prosperquiz', function(request, response) {
     var name = request.body.name;
     var answer = request.body.answer; 
     if ( name && answer) {
-        var success = questionsService.storeScore(name, answer);
-        if ( success ) {
-            return response.status(200).json({"message": "Thank you for your answer"});
+        var scoreResult = questionsService.storeScore(name, answer);
+        if ( scoreResult ) {
+            return response.status(200).json({"message": "Thank you for your answer to question "+scoreResult.currentQuestion});
         } else {
             return response.status(500).json({"error": "Could not save answer"});
         }
@@ -56,12 +57,10 @@ app.post('/prosperquiz', function(request, response) {
     }
 });
 
-
 app.get('/prosperquiz/scores', function(request, response) {
     console.log("New GET request received to /prosperquiz/scores");
     return response.status(200).json(questionsService.getCurrentScores());
 });
-
 
 var portNumber = 34343;
 app.listen(portNumber);
