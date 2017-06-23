@@ -10,7 +10,7 @@ var questionsService = require('./questions-service');
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'static'))); // get references to the html's
+app.use('/prosperquiz', express.static(path.join(__dirname, 'static'))); // get references to the html's
 
 app.get('/prosperquiz/questions', function(request, response) {
     console.log("New request received to /prosperquiz/questions");
@@ -41,25 +41,52 @@ app.get('/prosperquiz', function(request, response) {
     response.status(200).end(questionHtml);
 });
 
-app.post('/prosperquiz', function(request, response) {
-    console.log("New POST request received to /prosperquiz");
-    var name = request.body.name;
-    var answer = request.body.answer; 
-    if ( name && answer) {
-        var scoreResult = questionsService.storeScore(name, answer);
-        if ( scoreResult ) {
-            return response.status(200).json({"message": "Thank you for your answer to question "+scoreResult.currentQuestion});
-        } else {
-            return response.status(500).json({"error": "Could not save answer"});
-        }
+app.post('/prosperquiz/slack', function(request, response) {
+    console.log("New POST request received to /prosperquiz/slack");
+
+    var token = request.body.token;
+    if ( !token && !(token === "MwU4GkhdkJS88MWMS0JsLqlI")) {
+        return response.status(403).json({});
+    }
+
+    var name = request.body.user_name;
+    if ( !name ) {
+        return response.status(422).json({ error: "No name provided"});
+    }
+    var answer = request.body.text;
+    if ( !answer ) {
+        answer = answer.trim();
+    }
+    if ( !answer && isNumber(answer)) {
+        return response.status(200).json({error: "No answer number provided"}); // 200 for slack
+    }
+    console.log("Got an answer ["+answer+"] from ["+name+"]");
+
+    var scoreResult = questionsService.storeScore(name, answer);
+    if ( scoreResult && !scoreResult.error ) {
+        return response.status(200).json({"text": "Thank you for your answer to question "+scoreResult.currentQuestion});
     } else {
-        return response.status(422).json({"error": "You must provide name and answer"});
+        if ( scoreResult.error) {
+            return response.status(200).json({"text": scoreResult.error}); // slack response
+        } else {
+            return response.status(500).json({"text": "Could not save answer"});
+        }
     }
 });
+
+function isNumber(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+}
 
 app.get('/prosperquiz/scores', function(request, response) {
     console.log("New GET request received to /prosperquiz/scores");
     return response.status(200).json(questionsService.getCurrentScores());
+});
+
+app.post('/prosperquiz/stop', function(request, response) {
+    console.log("New POST request received to /prosperquiz/stop");
+    var changeQuestionKey = request.body["key"];
+    return response.status(200).json(questionsService.stopGame(changeQuestionKey));
 });
 
 var portNumber = 34343;

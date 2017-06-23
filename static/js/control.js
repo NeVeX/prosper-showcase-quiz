@@ -9,7 +9,7 @@ function init() {
     var startQuestion = 1;
     var queryStartOverride = getParameterByName("start");
     if ( queryStartOverride ) {
-        startQuestion = queryStartOverride;
+        startQuestion = parseInt(queryStartOverride);
     }
 
     questionChangeKey = getParameterByName("key");
@@ -28,7 +28,7 @@ function getQuestion(questionNumber) {
     console.log("Getting question "+questionNumber);
     $.ajax({
 		type: "GET",  
-		url: "prosperquiz/questions?number="+questionNumber+"&key="+questionChangeKey,
+		url: "questions?number="+questionNumber+"&key="+questionChangeKey,
 		success: function(data) {
             onQuizDataReturned(questionNumber, data);
 		},
@@ -100,9 +100,25 @@ function onGameOver() {
     $("#timer").html("");
     $("#help-text-div").html("");
 
+    var jsonBodyForStop = JSON.stringify({ key: questionChangeKey});
+    console.log("stop request: "+jsonBodyForStop);
+    $.ajax({
+        type: "POST",
+        url: "stop",
+        headers: { "Content-Type": "application/json"},
+        data: jsonBodyForStop,
+        success: function(data) {
+            console.log("Response to stopping game: "+data);
+        },
+        error: function(error) {
+            console.log("Error occurred while asking to stop the game: "+error);
+        }
+    });
+
     $.ajax({
         type: "GET",
-        url: "prosperquiz/scores",
+        url: "scores",
+
         success: function(data) {
             onScoresReturned(data);
         },
@@ -137,7 +153,7 @@ function onScoresReturned(scores) {
             var scoresHtml = "";
             for (i = 0; i < keys.length; i++) {
                 var k = keys[i];
-                scoresHtml += k +": " + scoresAsKey[k].join(', ') + "<br>";
+                scoresHtml += k +" correct --> " + scoresAsKey[k].join(', ') + "<br>";
             }
             $("#answer-one").html(scoresHtml);
         }

@@ -1,4 +1,4 @@
-var CHANGE_QUESTION_KEY = "oscar";
+var CHANGE_QUESTION_KEY = "nevex";
 var fs = require('fs');
 
 var questionsJson = fs.readFileSync('config/questions.json');
@@ -12,10 +12,14 @@ var questions = JSON.parse(questionsJson);
 console.log("Read a total of ["+questions.length+"] questions");
 
 var allPlayerScores = {};
+var currentQuestionInUse = null; // Not in play at the start
 
 module.exports = {
     getQuestion : function(questionNumber, questionChangeKey) {
         return doGetQuestion(questionNumber, questionChangeKey);
+    },
+    stopGame : function(questionChangeKey) {
+        return doStopGame(questionChangeKey);
     },
     storeScore: function(name, answer) {
         return recordPlayerAnswer(name, answer);
@@ -25,7 +29,20 @@ module.exports = {
     }
 };
 
-var currentQuestionInUse = 1;
+function startNewGame() {
+    console.log("Starting a new game");
+    allPlayerScores = {};
+}
+
+function doStopGame(questionChangeKey) {
+    if ( questionChangeKey && CHANGE_QUESTION_KEY === questionChangeKey) {
+        console.log("Stopping game at question ["+currentQuestionInUse+"] - the provided key is correct");
+        currentQuestionInUse = null;
+    } else {
+        console.log("Will not stop game - the provided key is in-correct");
+    }
+    return { isStopped: currentQuestionInUse === null }
+}
 
 function getQuestionForNumber(number) {
     var questionKey = number - 1;
@@ -35,14 +52,14 @@ function getQuestionForNumber(number) {
     return null;
 }
 
-// function getCurrentQuestion() {
-//     return getQuestionForNumber(currentQuestionInUse);
-// }
-
 function doGetQuestion(questionNumber, questionChangeKey) {
     var foundQuestion = getQuestionForNumber(questionNumber);
     if ( foundQuestion) {
         if ( questionChangeKey === CHANGE_QUESTION_KEY) {
+            if ( currentQuestionInUse === null ) {
+                // looks like we are starting a new game
+                startNewGame();
+            }
             // Only allow question to change if the key is present
             currentQuestionInUse = questionNumber;
             console.log("Changed the question in use to ["+currentQuestionInUse+"] since the given key is correct");
@@ -65,13 +82,17 @@ function doGetQuestion(questionNumber, questionChangeKey) {
 
 function recordPlayerAnswer(name, answer) {
 
+    if ( !currentQuestionInUse ) {
+        return { error: "There is no live game at the moment - check back later" }
+    }
+
     var questionInPlay = currentQuestionInUse; // don't use public variable while doing this update (in case it changes)
 
     console.log("Recording player "+name+" answer "+answer+" for question in play "+questionInPlay);
     var currentQuestion = getQuestionForNumber(questionInPlay);
     if ( !currentQuestion ) {
         console.log("Could not get the current question: "+questionInPlay);
-        return null;
+        return { error: "Could not record score for question "+questionInPlay };
     }
     var correctAnswer = currentQuestion.correctAnswer;
     console.log("Correct answer: "+correctAnswer+" - given answer "+answer);
