@@ -26,12 +26,47 @@ module.exports = {
     },
     getCurrentScores: function() {
         return doGetCurrentScores();
+    },
+    getAnswer: function(questionNumber, questionChangeKey) {
+        return doGetAnswerForQuestion(questionNumber, questionChangeKey);
+    },
+    pauseQuiz: function(questionChangeKey) {
+        return doPauseQuiz(questionChangeKey);
     }
 };
+
+function doPauseQuiz(questionChangeKey) {
+    var responseMessage;
+    if ( questionChangeKey && CHANGE_QUESTION_KEY === questionChangeKey) {
+        console.log("Pausing the game");
+        currentQuestionInUse = null;
+        responseMessage = "Game paused";
+    } else {
+        console.log("Will not pause game - key is incorrect");
+        responseMessage = "You are not allowed pause the game";
+    }
+    return { message: responseMessage};
+
+}
 
 function startNewGame() {
     console.log("Starting a new game");
     allPlayerScores = {};
+    currentQuestionInUse = 1;
+}
+
+function doGetAnswerForQuestion(questionNumber, questionChangeKey) {
+    var answerToReturn;
+    if ( questionChangeKey && CHANGE_QUESTION_KEY === questionChangeKey) {
+        var question = getQuestionForNumber(questionNumber);
+        if ( question ) {
+            answerToReturn = question.correctAnswer;
+        }
+    } else {
+        console.log("Will not give answer to question ["+questionNumber+"] since key is incorrect");
+        answerToReturn = "Nope - you aren't allowed to know the answer";
+    }
+    return { answer: answerToReturn}
 }
 
 function doStopGame(questionChangeKey) {
@@ -54,9 +89,9 @@ function getQuestionForNumber(number) {
 
 function doGetQuestion(questionNumber, questionChangeKey) {
     var foundQuestion = getQuestionForNumber(questionNumber);
-    if ( foundQuestion) {
+    if ( foundQuestion ) {
         if ( questionChangeKey === CHANGE_QUESTION_KEY) {
-            if ( currentQuestionInUse === null ) {
+            if ( questionNumber === 1 && currentQuestionInUse === null ) {
                 // looks like we are starting a new game
                 startNewGame();
             }

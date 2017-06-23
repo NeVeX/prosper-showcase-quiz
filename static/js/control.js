@@ -40,17 +40,19 @@ function getQuestion(questionNumber) {
 
 function onQuizDataReturned(questionNumber, data) {
     console.log("Got data back from quiz api");
+    // So this is a terrible way to set html - but feck it, I have to see if this whole app will even work
+    // so for now, setting this here in a terrible way. Forgive me.
     console.log(data);
-    $("#question").html(questionNumber +": "+data.question);
-    $("#answer-one").html("1: "+data.answerOne);
-    $("#answer-two").html("2: "+data.answerTwo);
+    $("#question").html("<b>Question "+ questionNumber +":</b> "+data.question);
+    $("#answer-one").html("<b style=\"margin-right: 15px\">Answer 1:</b> "+data.answerOne);
+    $("#answer-two").html("<b style=\"margin-right: 15px\">Answer 2:</b> "+data.answerTwo);
     if ( data.answerThree) {
-        $("#answer-three").html("3: "+data.answerThree);
+        $("#answer-three").html("<b style=\"margin-right: 15px\">Answer 3:</b> "+data.answerThree);
     } else {
         $("#answer-three").html("");
     }
     if ( data.answerFour) {
-        $("#answer-four").html("4: "+data.answerFour); 
+        $("#answer-four").html("<b style=\"margin-right: 15px\">Answer 4: </b>"+data.answerFour);
     } else {
         $("#answer-four").html("");
     }
@@ -60,20 +62,56 @@ function onQuizDataReturned(questionNumber, data) {
 }
 
 function startTimer(timeAllowed, currentQuestion, isMoreQuestions) {
-    var timeLeft = timeAllowed;
+    var timeLeft = 3;
     $("#timer").html(timeLeft);
     var timeLeftInterval = setInterval(function() {
         $("#timer").html(timeLeft--);
         if(timeLeft < 0) {
             console.log("Timer is done");
             clearInterval(timeLeftInterval);
-            if ( isMoreQuestions) {
-                getQuestion(currentQuestion + 1);
-            } else {
-                onGameOver();
-            }
+            onTimeElapsedForQuestion(currentQuestion, isMoreQuestions);
         }
     },1000);
+}
+
+function onTimeElapsedForQuestion(currentQuestion, isMoreQuestions) {
+    // show the correct answer
+    $("#timer").html(""); // hide the timer
+    pauseQuiz();
+    $.ajax({
+        type: "GET",
+        url: "answers?number="+currentQuestion+"&key="+questionChangeKey,
+        success: function(data) {
+            $("#timer").html("Correct answer: "+data.answer); // Use the timer to show the correct answer
+            var showAnswerInterval = setInterval(function() {
+                clearInterval(showAnswerInterval); // stop it
+                if ( isMoreQuestions) {
+                    getQuestion(currentQuestion + 1); // go to the next question
+                } else {
+                    onGameOver();
+                }
+            },5000); // show it for 5 seconds
+        },
+        error: function(error) {
+            onError(error);
+        }
+    });
+}
+
+function pauseQuiz() {
+    var jsonBodyForStop = JSON.stringify({ key: questionChangeKey});
+    $.ajax({
+        type: "POST",
+        url: "pause",
+        headers: { "Content-Type": "application/json"},
+        data: jsonBodyForStop,
+        success: function(data) {
+            console.log("Response to pausing game: "+data.message);
+        },
+        error: function(error) {
+            console.log("Error occurred while asking to pause the game: "+error);
+        }
+    });
 }
 
 function getParameterByName(sParam) {
@@ -93,7 +131,7 @@ function getParameterByName(sParam) {
 
 function onGameOver() {
     console.log("GAME OVER");
-    $("#question").html("Game Over!<br>Who answered the most?");
+    $("#question").html("Game Over!<br>So how many questions did people get correct?");
     $("#answer-two").html("");
     $("#answer-three").html("");
     $("#answer-four").html("");
@@ -134,7 +172,7 @@ function onScoresReturned(scores) {
         var scoresAsKey = { };
         for ( score in scores) {
             if ( scores.hasOwnProperty(score)) {
-                var name = scores[score].name
+                var name = scores[score].name;
                 var playerScore = scores[score].score;
                 console.log("Score - Name: "+name +" "+playerScore);
                 if ( !scoresAsKey[playerScore]) {
@@ -153,7 +191,7 @@ function onScoresReturned(scores) {
             var scoresHtml = "";
             for (i = 0; i < keys.length; i++) {
                 var k = keys[i];
-                scoresHtml += k +" correct --> " + scoresAsKey[k].join(', ') + "<br>";
+                scoresHtml += "<b style='color: blue; margin-right: 15px'>" + k + " Correct:</b>" + scoresAsKey[k].join(', ') + "<br><br>";
             }
             $("#answer-one").html(scoresHtml);
         }

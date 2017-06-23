@@ -28,6 +28,32 @@ app.get('/prosperquiz/questions', function(request, response) {
     }
 });
 
+// Ya, ya - this should be a sub-resourse under "questions" - but again, this is as quick app - not a design poc app
+app.get('/prosperquiz/answers', function(request, response) {
+    console.log("New request received to /prosperquiz/answers");
+    var questionNumber = request.query.number;
+    if ( questionNumber ) {
+        var questionChangeKey = request.query["key"];
+        var answerToReturn = questionsService.getAnswer(questionNumber, questionChangeKey);
+        if ( answerToReturn) {
+            return response.status(200).json(answerToReturn);
+        } else {
+            return response.status(422).json({"error": "Could not find answer to question "+questionNumber});
+        }
+    } else {
+        return response.status(422).json({"error": "You must provide a question number"});
+    }
+});
+
+// Ya, ya - this should be a sub-resourse under "questions" - but again, this is as quick app - not a design poc app
+app.post('/prosperquiz/pause', function(request, response) {
+    console.log("New POST request received to /prosperquiz/pause");
+    var questionToChangeKey = request.body["key"];
+    var pauseResponse = questionsService.pauseQuiz(questionToChangeKey);
+    return response.status(200).json(pauseResponse);
+});
+
+
 var questionHtml = fs.readFileSync('static/question.html');
 
 app.get('/prosperquiz', function(request, response) {
@@ -51,23 +77,25 @@ app.post('/prosperquiz/slack', function(request, response) {
 
     var name = request.body.user_name;
     if ( !name ) {
-        return response.status(422).json({ error: "No name provided"});
+        return response.status(422).json({ "error": "No name provided"});
     }
     var answer = request.body.text;
     if ( !answer ) {
         answer = answer.trim();
     }
-    if ( !answer && isNumber(answer)) {
-        return response.status(200).json({error: "No answer number provided"}); // 200 for slack
+    if ( !answer || !isNumber(answer)) {
+        // 200 for slack
+        return response.status(200).json({"text": "Looks like you provided an invalid answer number, try again with a valid answer"});
     }
-    console.log("Got an answer ["+answer+"] from ["+name+"]");
+    console.log("Got an valid answer ["+answer+"] from ["+name+"]");
 
     var scoreResult = questionsService.storeScore(name, answer);
     if ( scoreResult && !scoreResult.error ) {
         return response.status(200).json({"text": "Thank you for your answer to question "+scoreResult.currentQuestion});
     } else {
         if ( scoreResult.error) {
-            return response.status(200).json({"text": scoreResult.error}); // slack response
+            // needs to be a 200 for slack response
+            return response.status(200).json({"text": scoreResult.error});
         } else {
             return response.status(500).json({"text": "Could not save answer"});
         }
@@ -91,4 +119,4 @@ app.post('/prosperquiz/stop', function(request, response) {
 
 var portNumber = 34343;
 app.listen(portNumber);
-console.log('Listening on port '+portNumber+'...');
+console.log('Server started and listening on port '+portNumber+'...');
