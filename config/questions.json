@@ -1,27 +1,253 @@
 [
     {
-        "question": "What year is it?",
-        "answerOne": "2014",
-        "answerTwo": "2015",
-        "answerThree": "2016",
-        "answerFour": "2017",
+        "question": "What does it say on the wall when coming out of our 3rd floor elevator?",
+        "answerOne": "Welcome to Prosper",
+        "answerTwo": "Happy pride week",
+        "answerThree": "It's good to see you",
+        "answerFour": "Have a great day",
+        "correctAnswer": 3,
+        "timeAllowed": 32
+    },
+    {
+        "question": "What does PFV stand for?",
+        "answerOne": "Pending Funding Verification",
+        "answerTwo": "Post Funding Verification",
+        "answerThree": "Prosper Funding Verification",
+        "answerFour": "Pre Funding Verification",
         "correctAnswer": 4,
+        "timeAllowed": 35
+    },
+    {
+        "question": "How many fruit baskets are there?",
+        "answerOne": "6",
+        "answerTwo": "12",
+        "answerThree": "9",
+        "answerFour": "8",
+        "correctAnswer": 3,
+        "timeAllowed": 35
+    },
+    {
+        "question": "What are the flavors of Zapps crisps that we have?",
+        "answerOne": "Voodoo and Original",
+        "answerTwo": "Mesquite BBQ and Original",
+        "answerThree": "Voodoo and Creole Onion",
+        "answerFour": "Salt and Vinegar and Voodoo",
+        "correctAnswer": 3,
+        "timeAllowed": 35
+    },
+    {
+        "question": "How many lockers are there?",
+        "answerOne": "36",
+        "answerTwo": "60",
+        "answerThree": "48",
+        "answerFour": "52",
+        "correctAnswer": 3,
         "timeAllowed": 30
     },
     {
-        "question": "Prosper is now profitable?",
-        "answerOne": "Yes",
-        "answerTwo": "Nope",
+        "question": "When was Prosper founded?",
+        "answerOne": "2001",
+        "answerTwo": "2004",
+        "answerThree": "2005",
+        "answerFour": "2007",
+        "correctAnswer": 3,
+        "timeAllowed": 30
+    },
+    {
+        "question": "In the Common area, what is the number on the maximum occupancy sign?",
+        "answerOne": "26",
+        "answerTwo": "38",
+        "answerThree": "48",
+        "answerFour": "60",
         "correctAnswer": 1,
         "timeAllowed": 30
     },
     {
-        "question": "8 + 2 = ?",
-        "answerOne": "14",
-        "answerTwo": "12",
-        "answerThree": "10",
-        "answerFour": "-2",
-        "correctAnswer": 3,
+        "question": "What is the highest floor that our elevator goes to?",
+        "answerOne": "9",
+        "answerTwo": "6",
+        "answerThree": "8",
+        "answerFour": "10",
+        "correctAnswer": 2,
         "timeAllowed": 30
+    },
+    {
+        "question": "What % of our platform is retail? (as of today)",
+        "answerOne": "less than 5%",
+        "answerTwo": "5 - 10%",
+        "answerThree": "10 - 15%",
+        "answerFour": "more than 20%",
+        "correctAnswer": 2,
+        "timeAllowed": 30
+    },
+    {
+        "question": "Is the number of active retail users growing/shrinking or plateauing?",
+        "answerOne": "Growing",
+        "answerTwo": "Shrinking",
+        "answerThree": "Plateauing",
+        "correctAnswer": 1,
+        "timeAllowed": 30
+    },
+    {
+        "question": "In the past 7 days how many errors were logged in Splunk?",
+        "answerOne": "~30,000",
+        "answerTwo": "~700,000",
+        "answerThree": "~15,000,000",
+        "answerFour": "~40,000,000",
+        "correctAnswer": 4,
+        "timeAllowed": 35
+    },
+    {
+        "question": "How many .Net services and jobs are there in PROD?",
+        "answerOne": "~75",
+        "answerTwo": "~20",
+        "answerThree": "~100",
+        "answerFour": "~10",
+        "correctAnswer": 1,
+        "timeAllowed": 35
+    },
+    {
+        "question": "How many people are in Engineering as of today? (Under Nasos)",
+        "answerOne": "~100",
+        "answerTwo": "~80",
+        "answerThree": "~150",
+        "answerFour": "~50",
+        "correctAnswer": 2,
+        "timeAllowed": 30
+    },
+    {
+        "question": "In Javascript, what will be assigned to x?<br><b>var x = \"1\" + \"2\" * 3;</b>",
+        "answerOne": "NaN",
+        "answerTwo": "9",
+        "answerThree": "7",
+        "answerFour": "16",
+        "correctAnswer": 4,
+        "timeAllowed": 40
+    },
+    {
+        "question": "In SQL Server 2012, what will be assigned to x?<br><b>DECLARE @x varchar = '1' + '2' * 3;</b>",
+        "answerOne": "Nothing - it will be a compile error",
+        "answerTwo": "9",
+        "answerThree": "15",
+        "answerFour": "7",
+        "correctAnswer": 4,
+        "timeAllowed": 40
+    },
+    {
+        "question": "What is our Servicing fee?",
+        "answerOne": "0.5%",
+        "answerTwo": "1%",
+        "answerThree": "2%",
+        "answerFour": "5%",
+        "correctAnswer": 2,
+        "timeAllowed": 30
+    },
+    {
+        "question": "How many active loans can one person have with Prosper?",
+        "answerOne": "1",
+        "answerTwo": "2",
+        "answerThree": "3",
+        "answerFour": "No limit",
+        "correctAnswer": 2,
+        "timeAllowed": 30
+    },
+    {
+        "question": "How many servers (VM and physical) do we have running in PROD? (Phoenix)",
+        "answerOne": "~500",
+        "answerTwo": "~1,000",
+        "answerThree": "~100",
+        "answerFour": "~250",
+        "correctAnswer": 4,
+        "timeAllowed": 35
+    },
+    {
+        "question": "In Java, what will be assigned to x?<br><b>String x = null + \"null\";</b>",
+        "answerOne": "A null pointer exception is thrown",
+        "answerTwo": "null",
+        "answerThree": "nullnull",
+        "answerFour": "Nothing - this will not compile",
+        "correctAnswer": 3,
+        "timeAllowed": 45
+    },
+    {
+        "question": "In .Net, what will be assigned to x?<br><b>String x = null + \"null\";</b>",
+        "answerOne": "A null pointer exception is thrown",
+        "answerTwo": "null",
+        "answerThree": "nullnull",
+        "answerFour": "Nothing - this will not compile",
+        "correctAnswer": 2,
+        "timeAllowed": 42
+    },
+    {
+        "question": "Before Git/Bitbucket, what was the source control we used at Prosper?",
+        "answerOne": "Subversion",
+        "answerTwo": "ClearCase",
+        "answerThree": "CVS",
+        "answerFour": "Perforce",
+        "correctAnswer": 4,
+        "timeAllowed": 30
+    },
+    {
+        "question": "Which of the following is NOT a conference room at Prosper?",
+        "answerOne": "Bear Market",
+        "answerTwo": "Money Goose",
+        "answerThree": "North Star",
+        "answerFour": "White Tank",
+        "correctAnswer": 2,
+        "timeAllowed": 32
+    },
+    {
+        "question": "Prosper's first funded listing was what amount?",
+        "answerOne": "35,000",
+        "answerTwo": "10,000",
+        "answerThree": "2,000",
+        "answerFour": "1,000",
+        "correctAnswer": 4,
+        "timeAllowed": 35
+    },
+    {
+        "question": "How many Git repos do we currently have?",
+        "answerOne": "250",
+        "answerTwo": "200",
+        "answerThree": "180",
+        "answerFour": "350",
+        "correctAnswer": 2,
+        "timeAllowed": 35
+    },
+    {
+        "question": "What does NOC stand for?",
+        "answerOne": "Nightly Operations Center",
+        "answerTwo": "Nightly On Call",
+        "answerThree": "Network Operations Center",
+        "answerFour": "Notice Operations Center",
+        "correctAnswer": 3,
+        "timeAllowed": 35
+    },
+    {
+        "question": "What anniversary is our CEO celebrating this month?",
+        "answerOne": "2 year work anniversary",
+        "answerTwo": "3 month consortium signed anniversary",
+        "answerThree": "1 year San Francisco anniversary",
+        "answerFour": "25 year wedding anniversary",
+        "correctAnswer": 4,
+        "timeAllowed": 35
+    },
+    {
+        "question": "How many front line clients (e.g. customer services) do we have talking to Prosper customers",
+        "answerOne": "~400",
+        "answerTwo": "~200",
+        "answerThree": "~800",
+        "answerFour": "~500",
+        "correctAnswer": 1,
+        "timeAllowed": 35
+    },
+    {
+        "question": "What were our corporate servers named after?",
+        "answerOne": "Planets",
+        "answerTwo": "Seinfeld characters",
+        "answerThree": "Cheers characters",
+        "answerFour": "Fictional cities",
+        "correctAnswer": 3,
+        "timeAllowed": 32
     }
 ]

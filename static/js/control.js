@@ -62,7 +62,7 @@ function onQuizDataReturned(questionNumber, data) {
 }
 
 function startTimer(timeAllowed, currentQuestion, isMoreQuestions) {
-    var timeLeft = 3;
+    var timeLeft = 1;
     $("#timer").html(timeLeft);
     var timeLeftInterval = setInterval(function() {
         $("#timer").html(timeLeft--);
@@ -90,7 +90,7 @@ function onTimeElapsedForQuestion(currentQuestion, isMoreQuestions) {
                 } else {
                     onGameOver();
                 }
-            },5000); // show it for 5 seconds
+            },100); // show it for 5 seconds
         },
         error: function(error) {
             onError(error);
