@@ -1,7 +1,7 @@
 {
   "name": "nameless-prosper-slack",
   "description": "Nameless / command for anonymous comments in slack",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "dependencies": {
     "express": "4.15.3",

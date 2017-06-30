@@ -1,0 +1,20 @@
+[
+  {
+    "question": "This is question one?",
+    "answerOne": "Answer one",
+    "answerTwo": "Answer two",
+    "answerThree": "Answer three",
+    "answerFour": "Answer four",
+    "correctAnswer": 3,
+    "timeAllowed": 22
+  },
+  {
+    "question": "This is question two?",
+    "answerOne": "Answer one",
+    "answerTwo": "Answer two",
+    "answerThree": "Answer three",
+    "answerFour": "Answer four",
+    "correctAnswer": 1,
+    "timeAllowed": 22
+  }
+]

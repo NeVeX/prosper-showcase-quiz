@@ -1,0 +1,58 @@
+.align-center, .scores-div {
+    display: flex;
+    align-items: center;
+    min-height: 24em;
+    justify-content: center;
+    flex-direction: column;
+    margin-right: 100px;
+    margin-left: 100px;
+}
+
+.answer-div-one, .answer-div-two, .answer-div-three, .answer-div-four, .winning-answer {
+    display: flex;
+    flex-direction: row;
+}
+
+.scores-div {
+    margin-right: 100px;
+    margin-left: 100px;
+}
+.question-text {
+    text-align: center;
+}
+.scores-text {
+    text-align: center;
+}
+.answers-div {
+    margin-top: 50px;
+}
+
+.timer-div {
+    margin-top: 40px;
+}
+
+.prefix-static-answer {
+    margin-right: 15px;
+    text-align: center;
+    color: #aaaaaa;
+}
+
+.dynamic-answer {
+    text-align: left;
+}
+.score-amount-number {
+    color: #3498db;
+    margin-right: 15px
+}
+
+.timer {
+    color: #3498db;
+    font-weight: 900;
+}
+.help-text {
+    text-align: center;
+}
+
+.help-text-highlight {
+    color: #f39c12;
+}

@@ -1,7 +1,40 @@
-var CHANGE_QUESTION_KEY = "nevex";
 var fs = require('fs');
 
-var questionsJson = fs.readFileSync('config/questions.json');
+module.exports = {
+    startNewGame: function () {
+        return doStartNewGame();
+    },
+    changeAnswersLeftDown: function () {
+        return doChangeAnswersLeftDown();
+    },
+    setCurrentQuestion: function(questionNumber) {
+        return doSetCurrentQuestion(questionNumber);
+    },
+    getQuestionForNumber : function(questionNumber) {
+        return doGetQuestionForNumber(questionNumber);
+    },
+    stopQuiz : function() {
+        return doStopQuiz();
+    },
+    pauseQuiz: function() {
+        return doPauseQuiz();
+    },
+    recordPlayerAnswer: function(name, answer) {
+        return doRecordPlayerAnswer(name, answer);
+    },
+    getCurrentScores: function() {
+        return doGetCurrentScores();
+    },
+    getAnswerForQuestion: function(questionNumber) {
+        return doGetAnswerForQuestion(questionNumber);
+    },
+    generateTestData: function () {
+        return doGenerateTestData();
+    }
+};
+
+// Read the latest file
+var questionsJson = fs.readFileSync('config/questions.2017-06-30.json');
 
 if ( !questionsJson ) {
     throw Error("Did not load questions from json file");
@@ -9,77 +42,112 @@ if ( !questionsJson ) {
 
 var questions = JSON.parse(questionsJson);
 
-console.log("Read a total of ["+questions.length+"] questions");
+console.log("Loaded a total of ["+questions.length+"] questions");
 
 var allPlayerScores = {};
 var currentQuestionInUse = null; // Not in play at the start
+var currentAnswersInUse = null;
 
-module.exports = {
-    getQuestion : function(questionNumber, questionChangeKey) {
-        return doGetQuestion(questionNumber, questionChangeKey);
-    },
-    stopGame : function(questionChangeKey) {
-        return doStopGame(questionChangeKey);
-    },
-    storeScore: function(name, answer) {
-        return recordPlayerAnswer(name, answer);
-    },
-    getCurrentScores: function() {
-        return doGetCurrentScores();
-    },
-    getAnswer: function(questionNumber, questionChangeKey) {
-        return doGetAnswerForQuestion(questionNumber, questionChangeKey);
-    },
-    pauseQuiz: function(questionChangeKey) {
-        return doPauseQuiz(questionChangeKey);
-    }
-};
-
-function doPauseQuiz(questionChangeKey) {
-    var responseMessage;
-    if ( questionChangeKey && CHANGE_QUESTION_KEY === questionChangeKey) {
-        console.log("Pausing the game");
-        currentQuestionInUse = null;
-        responseMessage = "Game paused";
-    } else {
-        console.log("Will not pause game - key is incorrect");
-        responseMessage = "You are not allowed pause the game";
-    }
-    return { message: responseMessage};
-
-}
-
-function startNewGame() {
-    console.log("Starting a new game");
+function doStartNewGame() {
     allPlayerScores = {};
-    currentQuestionInUse = 1;
+    doSetCurrentQuestion(1);
+    console.log("Started a new game");
+    return true;
 }
 
-function doGetAnswerForQuestion(questionNumber, questionChangeKey) {
-    var answerToReturn;
-    if ( questionChangeKey && CHANGE_QUESTION_KEY === questionChangeKey) {
-        var question = getQuestionForNumber(questionNumber);
-        if ( question ) {
-            answerToReturn = question.correctAnswer;
+function doSetCurrentQuestion(questionNumber) {
+    var question = getQuestion(questionNumber);
+    if ( question ) {
+        currentQuestionInUse = questionNumber;
+        currentAnswersInUse = getTotalAnswersForQuestion(question);
+        console.log("Changed the question in use to ["+currentQuestionInUse+"] - answers is use ["+currentAnswersInUse+"]");
+        return true;
+    }
+    return false;
+}
+
+function doGenerateTestData() {
+    if ( ! allPlayerScores ) {
+        doStartNewGame();
+    }
+    var totalQuestions = questions.length;
+    var i;
+    for (i = 1; i < 100; i++) {
+        var name = "test-name-"+i;
+        var q;
+        for ( q = 1; q <= totalQuestions; q++) {
+            var answer = 1; // will be wrong for some questions
+            if ( Math.floor(Math.random() * 2) === 1) {
+                answer = doGetAnswerForQuestion(q).answer; // actually get the answer
+            }
+            // record a score
+            doRecordPlayerAnswerWithGameState(name, answer, q, 4);
         }
-    } else {
-        console.log("Will not give answer to question ["+questionNumber+"] since key is incorrect");
-        answerToReturn = "Nope - you aren't allowed to know the answer";
     }
-    return { answer: answerToReturn}
+    console.log("Generated test data for ["+allPlayerScores.length+"] players");
+    return true;
 }
 
-function doStopGame(questionChangeKey) {
-    if ( questionChangeKey && CHANGE_QUESTION_KEY === questionChangeKey) {
-        console.log("Stopping game at question ["+currentQuestionInUse+"] - the provided key is correct");
-        currentQuestionInUse = null;
-    } else {
-        console.log("Will not stop game - the provided key is in-correct");
+function doGetAnswerForQuestion(questionNumber) {
+    var question = getQuestion(questionNumber);
+    if ( question ) {
+        return { answer: question.correctAnswer}
     }
-    return { isStopped: currentQuestionInUse === null }
 }
 
-function getQuestionForNumber(number) {
+function doChangeAnswersLeftDown() {
+    var answersInUse = currentAnswersInUse;
+    if ( answersInUse ) {
+        var newScoreAmount = getScoreAmountForAnswersLeft(answersInUse);
+        if ( answersInUse > 2 ) {
+            var previousScoreAmount = newScoreAmount;
+            --answersInUse;
+            newScoreAmount = getScoreAmountForAnswersLeft(answersInUse);
+            console.log("Changing scoreAmount from [" + previousScoreAmount + "] to [" + newScoreAmount + "]");
+            // Now set the score amount
+            currentAnswersInUse = answersInUse;
+        }
+        return newScoreAmount;
+    }
+    return null;
+}
+
+function doPauseQuiz() {
+    console.log("Paused game at question ["+currentQuestionInUse+"]");
+    currentQuestionInUse = null;
+    return true;
+}
+
+function getScoreAmountForAnswersLeft(currentAnswersInUse) {
+    if ( currentAnswersInUse && currentAnswersInUse > 0 ) {
+        if ( currentAnswersInUse === 4 ) {
+            return 5; // there's four questions in play
+        } else if ( currentAnswersInUse === 3 ) {
+            return 3; // there's three questions in play
+        }
+        return 1; // default
+     }
+     return 0; // hmmm...
+}
+
+function getTotalAnswersForQuestion(question) {
+    if ( question.answerFour) {
+        return 4;
+    } else if ( question.answerThree) {
+        return 3;
+    } else if ( question.answerTwo) {
+        return 2;
+    }
+    return 1; // only one answer? (shouldn't happen)
+}
+
+function doStopQuiz() {
+    // Pause the game for now - later we may want to add stop game logic (extra to pause game logic)
+    doPauseQuiz();
+    return true;
+}
+
+function getQuestion(number) {
     var questionKey = number - 1;
     if ( questionKey >= 0 && questionKey < questions.length) {
         return questions[questionKey];
@@ -87,20 +155,9 @@ function getQuestionForNumber(number) {
     return null;
 }
 
-function doGetQuestion(questionNumber, questionChangeKey) {
-    var foundQuestion = getQuestionForNumber(questionNumber);
+function doGetQuestionForNumber(questionNumber) {
+    var foundQuestion = getQuestion(questionNumber);
     if ( foundQuestion ) {
-        if ( questionChangeKey === CHANGE_QUESTION_KEY) {
-            if ( questionNumber === 1 && currentQuestionInUse === null ) {
-                // looks like we are starting a new game
-                startNewGame();
-            }
-            // Only allow question to change if the key is present
-            currentQuestionInUse = questionNumber;
-            console.log("Changed the question in use to ["+currentQuestionInUse+"] since the given key is correct");
-        } else {
-            console.log("Not changing the question since the given question is incorrect");
-        }
         // Don't return the direct question object, create the response we want to send to the client
         return {
             question: foundQuestion.question,
@@ -115,41 +172,49 @@ function doGetQuestion(questionNumber, questionChangeKey) {
     return null;
 }
 
-function recordPlayerAnswer(name, answer) {
+function doRecordPlayerAnswer(name, answer) {
+    return doRecordPlayerAnswerWithGameState(name, answer, currentQuestionInUse, currentAnswersInUse);
+}
 
-    if ( !currentQuestionInUse ) {
-        return { error: "There is no live game at the moment - check back later" }
+function doRecordPlayerAnswerWithGameState(name, answer, questionInPlay, answersInUse) {
+    if ( !questionInPlay ) {
+        return { error: "There is no live quiz at the moment - check back later" }
     }
-
-    var questionInPlay = currentQuestionInUse; // don't use public variable while doing this update (in case it changes)
-
-    console.log("Recording player "+name+" answer "+answer+" for question in play "+questionInPlay);
-    var currentQuestion = getQuestionForNumber(questionInPlay);
+    var scoreAmount = getScoreAmountForAnswersLeft(answersInUse);
+    // console.log("Recording player "+name+" answer "+answer+" for question in play "+questionInPlay);
+    var currentQuestion = getQuestion(questionInPlay);
     if ( !currentQuestion ) {
         console.log("Could not get the current question: "+questionInPlay);
         return { error: "Could not record score for question "+questionInPlay };
     }
     var correctAnswer = currentQuestion.correctAnswer;
-    console.log("Correct answer: "+correctAnswer+" - given answer "+answer);
+    // console.log("Correct answer: "+correctAnswer+" - given answer "+answer);
     if ( !(name in allPlayerScores) ) {
-        allPlayerScores[name] = {}; 
-        allPlayerScores[name][questionInPlay] = 0;
+        allPlayerScores[name] = {};
     }
+
+    // We only allow one answer per question now
+    if ( (questionInPlay in allPlayerScores[name]) ) {
+        // console.log("Not allowing player to answer again since they already answered");
+        return { error: "I can't accept your answer since you've already answered this question"};
+    }
+
     if ( correctAnswer == answer) {
-        console.log("Answer given is correct");
-        allPlayerScores[name][questionInPlay] = 1; // Don't increment, just give a point
+        allPlayerScores[name][questionInPlay] = scoreAmount; // Give them the score
+        console.log("Answer given is correct - they get ["+scoreAmount+"] points");
     } else {
-        console.log("Answer given is not correct");
+        allPlayerScores[name][questionInPlay] = 0; // Give them nothing
+        // console.log("Answer given is not correct - they get [0] points");
     }
     return { currentQuestion: questionInPlay};
 }
 
 function doGetCurrentScores() {
     var returnScores = [];
-    for ( playerName in allPlayerScores ) {
+    for ( var playerName in allPlayerScores ) {
         var totalPlayerScore = 0;
         if ( allPlayerScores.hasOwnProperty(playerName) ) {
-            for ( questionNumber in allPlayerScores[playerName] ) {
+            for ( var questionNumber in allPlayerScores[playerName] ) {
                 if ( allPlayerScores[playerName].hasOwnProperty(questionNumber)) {
                     totalPlayerScore += allPlayerScores[playerName][questionNumber];
                 }

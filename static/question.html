@@ -1,70 +1,61 @@
 <html>
+
     <head>
         <meta charset="utf-8">
-        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
-        <script src="js/control.js"></script>
-        <style>
-            body {
-			    background-color: #e5ddd7
-		    }
-		    .align-center {
-			    display: flex;
-                align-items: center;
-                min-height: 24em;
-                justify-content: center;
-                flex-direction: column;
-			}
-            .question-text {
-                text-align: center;
-                font-size: 45px;
-                color: black;
-            }
-            .answers-div {
-                margin-top: 50px;                
-            }
-            .answers-text {
-                text-align: left;
-                font-size: 32px;
-                color: black;
-                margin-top: 10px;
-            }
-            .timer {
-                color: blue;
-                font-size: 45px;
-                text-align: center;
-            }
-            .help-text {
-                color: black;
-                text-align: center;
-                font-size: 20px;
-            }
-		</style>
-        </style>
+        <script src="js/jquery-3.1.1.js"></script>
+        <script src="js/question-control.js"></script>
+        <link rel="stylesheet" href="css/questions.css">
+        <link rel="stylesheet" href="css/ext-question.css">
     </head>
 
 	<body class="align-center">
 
-        <div class="question-text" id="question">What is the size of the sun?</div>
-         
-         <div class="answers-div" >
-            <div class="answers-text" id="answer-one" style="align"margin-right: 10px">1: 25km</div>
-            <div class="answers-text" id="answer-two">2: 300km</div>
-            <div class="answers-text" id="answer-three">3: 1km</div>
-            <div class="answers-text"id="answer-four">4: 50m</div>
-        </div>
-        
-        <div class="answers-div">
-            <div id="timer" class="timer">30</div>
-        </div>
+        <div id="questions-div" class="align-center">
 
-        <div id="help-text-div" style="margin-top: 10px">
-            <div class="help-text">
-                To vote, use <b style="color: red">/quiz [answer-number]</b> in Slack
+            <h1 class="question-text" id="question-text">Question</h1>
+
+            <div class="answers-div" >
+
+                <div class="answer-div-one" id="answer-div-one">
+                    <h2 class="prefix-static-answer">1.</h2>
+                    <h2 class="dynamic-answer" id="answer-text-one">Answer One</h2>
+                </div>
+
+                <div class="answer-div-two" id="answer-div-two">
+                    <h2 class="prefix-static-answer">2.</h2>
+                    <h2 class="dynamic-answer" id="answer-text-two">Answer Two</h2>
+                </div>
+
+                <div class="answer-div-three" id="answer-div-three">
+                    <h2 class="prefix-static-answer">3.</h2>
+                    <h2 class="dynamic-answer" id="answer-text-three">Answer Three</h2>
+                </div>
+
+                <div class="winning-answer" id="answer-div-four">
+                    <h2 class="prefix-static-answer">4.</h2>
+                    <h2 class="dynamic-answer" id="answer-text-four">Answer Four</h2>
+                </div>
             </div>
-            <div class="help-text">
-                Example: <b style="color: red">/quiz 2</b>
+
+            <div id="scores-div" class="scores-div" >
+                <div class="scores-text" id="scores-text"></div>
             </div>
+
+            <div class="timer-div">
+                <h1 id="timer-text" class="timer">30</h1>
+            </div>
+
         </div>
+        <footer>
+            <div id="help-text-div" style="margin-top: 10px">
+                <h5 class="help-text">
+                    To vote, use <b class="help-text-highlight">/quiz [answer-number]</b> in Slack
+                </h5>
+                <h5 class="help-text">
+                    Example: <b class="help-text-highlight">/quiz 2</b>
+                </h5>
+            </div>
+        </footer>
     </body>
 
 </html>
