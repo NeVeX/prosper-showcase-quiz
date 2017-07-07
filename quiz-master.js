@@ -1,115 +1,47 @@
-var questionsService = require('./questions-service');
-
 var QUIZ_MASTER_KEY = "nevex";
+var QUIZ_KEY_HEADER = "Quiz-Key";
 
-module.exports = {
-    // startNewGame: function (quizMasterKey) {
-    //     return doStartNewGame(quizMasterKey);
-    // },
-    generateTestData: function (quizMasterKey) {
-        return doGenerateTestData(quizMasterKey);
-    },
-    changeAnswersLeftDown: function (quizMasterKey) {
-        return doChangeAnswersLeftDown( quizMasterKey);
-    },
-    setCurrentQuestion: function(questionNumber, quizMasterKey) {
-        return doSetCurrentQuestion(questionNumber, quizMasterKey);
-    },
-    getQuestionForNumber : function(questionNumber) {
-        return doGetQuestionForNumber(questionNumber);
-    },
-    stopQuiz : function(quizMasterKey) {
-        return doStopQuiz(quizMasterKey);
-    },
-    pauseQuiz: function(quizMasterKey) {
-        return doPauseQuiz(quizMasterKey);
-    },
-    recordPlayerAnswer: function(name, answer) {
-        return doRecordPlayerAnswer(name, answer);
-    },
-    getCurrentScores: function() {
-        return doGetCurrentScores();
-    },
-    getAnswerForQuestion: function(questionNumber, quizMasterKey) {
-        return doGetAnswerForQuestion(questionNumber, quizMasterKey);
+var questionApi = require('./questions-api');
+var slackApi = require('./slack-api');
+
+exports.isQuizMasterKeyCorrect = function(request) {
+   return checkIsQuizMasterKeyCorrect(request);
+};
+
+exports.getQuestionForNumber = function (request, response) {
+
+    var questionNumber = request.query.number;
+    if ( questionNumber ) {
+        var questionInformation = questionApi.getQuestionForNumber(request, questionNumber);
+        if ( questionInformation.error ) {
+            return response.status(422).json({error: questionInformation.error});
+        }
+        if ( questionInformation.didQuestionChange) {
+            // question has changed, so send updates to slack
+            slackApi.sendNewQuestionToSlackUsers(questionInformation);
+
+        }
+        return response.status(200).json(questionInformation);
+    } else {
+        return response.status(422).json({"error": "You must provide a question number"});
     }
 };
 
-function doChangeAnswersLeftDown(quizMasterKey) {
-    if ( isQuizMasterKeyCorrect(quizMasterKey)) {
-        return questionsService.changeAnswersLeftDown();
-    } else {
-        console.log("Not allowed to change score amount down since quiz master key is incorrect");
+exports.stopQuiz = function (request, response) {
+
+    var stopResponse = questionApi.stopQuiz(request);
+    if ( stopResponse.error ) {
+        return response.status(422).json(stopResponse.error);
     }
-}
 
-function doGenerateTestData(quizMasterKey) {
-    if ( isQuizMasterKeyCorrect(quizMasterKey)) {
-        return questionsService.generateTestData();
-    } else {
-        console.log("Not allowed to generate test data");
-    }
-}
+    var isStoppedStatus = stopResponse.isStopped;
+    slackApi.quizHasStopped();
+    return response.status(200).json({isStopped: isStoppedStatus});
+
+};
 
 
-function doSetCurrentQuestion(questionNumber, quizMasterKey) {
-    if ( isQuizMasterKeyCorrect(quizMasterKey)) {
-        if ( questionNumber === "1") { // hack for now...
-            return questionsService.startNewGame();
-        } else {
-            return questionsService.setCurrentQuestion(questionNumber);
-        }
-    } else {
-        console.log("Not allowed to set question to ["+questionNumber+"] since quiz master key is incorrect");
-    }
-}
-
-function doPauseQuiz(quizMasterKey) {
-    if ( isQuizMasterKeyCorrect(quizMasterKey) ) {
-        return questionsService.pauseQuiz();
-    } else {
-        console.log("Will not pause game since quiz master key is incorrect");
-    }
-}
-
-function isQuizMasterKeyCorrect(quizMasterKey) {
+function checkIsQuizMasterKeyCorrect(request) {
+    var quizMasterKey = request.get(QUIZ_KEY_HEADER);
     return quizMasterKey && QUIZ_MASTER_KEY === quizMasterKey;
 }
-
-// function doStartNewGame(quizMasterKey) {
-//     if ( isQuizMasterKeyCorrect(quizMasterKey) ) {
-//         return questionsService.startNewGame();
-//     } else {
-//         console.log("Will not start new game since quiz master key is incorrect");
-//     }
-// }
-
-function doGetAnswerForQuestion(questionNumber, quizMasterKey) {
-    if ( isQuizMasterKeyCorrect(quizMasterKey) ) {
-        return questionsService.getAnswerForQuestion(questionNumber);
-    } else {
-        console.log("Will not give answer to question ["+questionNumber+"] since quiz master key is incorrect");
-        throw new Error("Not authorized to view answers")
-    }
-}
-
-function doStopQuiz(quizMasterKey) {
-    if ( isQuizMasterKeyCorrect(quizMasterKey)) {
-        return questionsService.stopQuiz();
-    } else {
-        console.log("Will not stop game since quiz master key is incorrect");
-    }
-}
-
-function doGetQuestionForNumber(questionNumber) {
-    return questionsService.getQuestionForNumber(questionNumber);
-}
-
-function doRecordPlayerAnswer(name, answer) {
-    return questionsService.recordPlayerAnswer(name, answer);
-}
-
-function doGetCurrentScores() {
-    return questionsService.getCurrentScores();
-}
-

@@ -5,9 +5,17 @@ To play, this node app is shown on screen and simultaneously will accept slack c
 
 ##### Release Notes
 
+#### `1.2.0`
+
+* This version was used for the quiz in the Showcase on July 7th 2017
+* Rewrote the server node.js scripts to have simpler routes and modularity 
+* Added interactive integration to slack - new api's and services created to support it
+* Added charts that show how people answered after each question
+* Various bug fixes
+
 #### `1.1.0`
 
-* This version as used for the quiz in the Showcase on June 30th 2017
+* This version was used for the quiz in the Showcase on June 30th 2017
 * Added new sexy landing page
   * You need to enter the quiz-master key at the very bottom of the page and hit enter, to control the game and show the start button
 * Changed format of the quiz

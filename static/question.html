@@ -4,6 +4,8 @@
         <meta charset="utf-8">
         <script src="js/jquery-3.1.1.js"></script>
         <script src="js/question-control.js"></script>
+        <script src="js/chart-2.6.0.js"></script>
+        <script src="js/chart-control.js"></script>
         <link rel="stylesheet" href="css/questions.css">
         <link rel="stylesheet" href="css/ext-question.css">
     </head>
@@ -14,28 +16,34 @@
 
             <h1 class="question-text" id="question-text">Question</h1>
 
-            <div class="answers-div" >
+            <div class="answers-and-chart-div" id="answers-and-chart-div">
+                <div class="all-questions-div" id="all-questions-div">
 
-                <div class="answer-div-one" id="answer-div-one">
-                    <h2 class="prefix-static-answer">1.</h2>
-                    <h2 class="dynamic-answer" id="answer-text-one">Answer One</h2>
+                    <div class="answer-div-one" id="answer-div-one">
+                        <h2 class="prefix-static-answer">1.</h2>
+                        <h2 class="dynamic-answer" id="answer-text-one">Answer One</h2>
+                    </div>
+
+                    <div class="answer-div-two" id="answer-div-two">
+                        <h2 class="prefix-static-answer">2.</h2>
+                        <h2 class="dynamic-answer" id="answer-text-two">Answer Two</h2>
+                    </div>
+
+                    <div class="answer-div-three" id="answer-div-three">
+                        <h2 class="prefix-static-answer">3.</h2>
+                        <h2 class="dynamic-answer" id="answer-text-three">Answer Three</h2>
+                    </div>
+
+                    <div class="winning-answer" id="answer-div-four">
+                        <h2 class="prefix-static-answer">4.</h2>
+                        <h2 class="dynamic-answer" id="answer-text-four">Answer Four</h2>
+                    </div>
                 </div>
-
-                <div class="answer-div-two" id="answer-div-two">
-                    <h2 class="prefix-static-answer">2.</h2>
-                    <h2 class="dynamic-answer" id="answer-text-two">Answer Two</h2>
-                </div>
-
-                <div class="answer-div-three" id="answer-div-three">
-                    <h2 class="prefix-static-answer">3.</h2>
-                    <h2 class="dynamic-answer" id="answer-text-three">Answer Three</h2>
-                </div>
-
-                <div class="winning-answer" id="answer-div-four">
-                    <h2 class="prefix-static-answer">4.</h2>
-                    <h2 class="dynamic-answer" id="answer-text-four">Answer Four</h2>
+                <div id="chart-div" class="chart-div" >
+                    <canvas id="canvas"></canvas>
                 </div>
             </div>
+
 
             <div id="scores-div" class="scores-div" >
                 <div class="scores-text" id="scores-text"></div>
@@ -46,13 +54,11 @@
             </div>
 
         </div>
+
         <footer>
             <div id="help-text-div" style="margin-top: 10px">
                 <h5 class="help-text">
-                    To vote, use <b class="help-text-highlight">/quiz [answer-number]</b> in Slack
-                </h5>
-                <h5 class="help-text">
-                    Example: <b class="help-text-highlight">/quiz 2</b>
+                    To play, use either <b class="help-text-highlight">/quiz play</b> or answer using <b class="help-text-highlight">/quiz [1,2,3,4]</b> in any Slack channel
                 </h5>
             </div>
         </footer>

@@ -7,6 +7,7 @@ var quizMasterKey;
 function init() {
 
     $("#scores-div").hide();
+    fadeAllTheAnswers();
 
     console.log( "question-control.js activated" );
     quizMasterKey = localStorage.getItem("quiz-master-key"); // may or may not be set
@@ -35,6 +36,15 @@ function getQuestion(questionNumber) {
 	})	
 }
 
+function fadeAllTheAnswers() {
+    hideAnswerDiv(1, 1);
+    hideAnswerDiv(2, 1);
+    hideAnswerDiv(3, 1);
+    hideAnswerDiv(4, 1);
+    $("#timer-text").fadeTo(1, 0);
+    hideChart();
+}
+
 function resetHiddenAnswers() {
     $("#answer-div-one").fadeTo(1, 1);
     $("#answer-div-two").fadeTo(1, 1);
@@ -48,7 +58,7 @@ function onQuizDataReturned(questionNumber, data) {
     console.log("Got data back from quiz api: "+data);
     // show the question for a moment
     $("#question-text").html(data.question);
-
+    hideChart();
     $("#answer-text-one").html(data.answerOne);
     $("#answer-text-two").html(data.answerTwo);
     var howManyQuestionsInPlay = 2;
@@ -67,11 +77,8 @@ function onQuizDataReturned(questionNumber, data) {
     }
     var isMoreQuestions = questionNumber < data.totalQuestions;
 
-    if ( questionNumber > 1 ) {
-        setTimeout(showAllTheAnswers, 3000, questionNumber, data, howManyQuestionsInPlay, isMoreQuestions);
-    } else {
-        showAllTheAnswers(questionNumber, data, howManyQuestionsInPlay, isMoreQuestions);
-    }
+    setTimeout(showAllTheAnswers, 3000, questionNumber, data, howManyQuestionsInPlay, isMoreQuestions);
+
 }
 
 function showAllTheAnswers(questionNumber, data, howManyQuestionsInPlay, isMoreQuestions) {
@@ -93,7 +100,7 @@ function startAllTheTimers(timeAllowed, howManyQuestionsInPlay, currentQuestion,
         if(timeLeft < 0) {
             console.log("Timer is done");
             clearInterval(timeLeftInterval);
-            onTimeElapsedForQuestion(currentQuestion, isMoreQuestions);
+            onTimeElapsedForQuestion(currentQuestion, isMoreQuestions, howManyQuestionsInPlay);
         }
     },1000);
 
@@ -190,7 +197,7 @@ function reduceAnswerScoreAmount() {
     });
 }
 
-function onTimeElapsedForQuestion(currentQuestion, isMoreQuestions) {
+function onTimeElapsedForQuestion(currentQuestion, isMoreQuestions, howManyQuestionsInPlay) {
     // show the correct answer
     $("#timer-text").fadeTo(1, 0);
     pauseQuiz();
@@ -199,19 +206,19 @@ function onTimeElapsedForQuestion(currentQuestion, isMoreQuestions) {
         headers: { "Quiz-Key" : quizMasterKey },
         url: "answers?number="+currentQuestion,
         success: function(data) {
-            onAnswerToQuestionReturned(data.answer, currentQuestion, isMoreQuestions);
+            onAnswerToQuestionReturned(data.answer, currentQuestion, isMoreQuestions, howManyQuestionsInPlay);
         },
         error: function(error) {
             if ( quizMasterKey ) {
                 onError(error);
             } else {
-                onAnswerToQuestionReturned("** You cannot know the answer **", currentQuestion, isMoreQuestions);
+                onAnswerToQuestionReturned("** You cannot know the answer **", currentQuestion, isMoreQuestions, howManyQuestionsInPlay);
             }
         }
     });
 }
 
-function onAnswerToQuestionReturned(answer, currentQuestion, isMoreQuestions) {
+function onAnswerToQuestionReturned(answer, currentQuestion, isMoreQuestions, howManyAnswersInPlay) {
 
     // hide the other divs
     var i;
@@ -221,6 +228,8 @@ function onAnswerToQuestionReturned(answer, currentQuestion, isMoreQuestions) {
         }
     }
 
+    showChartData(currentQuestion, howManyAnswersInPlay);
+
     var showAnswerInterval = setInterval(function() {
         clearInterval(showAnswerInterval); // stop it
         hideAnswerDiv(answer, 1);
@@ -229,7 +238,23 @@ function onAnswerToQuestionReturned(answer, currentQuestion, isMoreQuestions) {
         } else {
             onGameOver();
         }
-    },5000); // show it for 5 seconds
+    }, 7000); // show it for a few seconds
+}
+
+function showChartData(currentQuestion, totalAnswersInPlay) {
+    $.ajax({
+        type: "GET",
+        headers: { "Quiz-Key" : quizMasterKey },
+        url: "stats?number="+currentQuestion,
+        success: function(data) {
+            showChartStatisticsForQuestion(data, totalAnswersInPlay);
+        },
+        error: function(error) {
+            if ( quizMasterKey ) {
+                onError(error);
+            }
+        }
+    });
 }
 
 function pauseQuiz() {
@@ -268,13 +293,10 @@ function getParameterByName(sParam) {
 function onGameOver() {
     console.log("GAME OVER");
 
-    $("#question-text").html("Game Over!<br>Now calculating the results...");
-    $("#answer-div-one").hide();
-    $("#answer-div-two").hide();
-    $("#answer-div-three").hide();
-    $("#answer-div-four").hide();
-    $("#timer-text").hide();
+    $("#question-text").html("Quiz Over!<br>Now calculating the results...");
+    fadeAllTheAnswers();
     $("#help-text-div").hide();
+    $("#answers-and-chart-div").hide();
     // Give the illusion of anticipation
     setTimeout(fetchScoresOnGameOver, 6000);
 }
@@ -334,7 +356,7 @@ function onScoresReturned(scores) {
             var scoresHtml = "";
             for (i = 0; i < keys.length; i++) {
                 var k = keys[i];
-                scoresHtml += "<h1><b class=\"score-amount-number\">" + k + " Points</b>" + scoresAsKey[k].join(', ') + "</h1><br><br>";
+                scoresHtml += "<h1><b class=\"score-amount-number\">" + k + " Points.</b>" + scoresAsKey[k].join(', ') + "</h1><br><br>";
             }
             $(scoresTextId).html(scoresHtml);
         }
