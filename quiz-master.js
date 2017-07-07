@@ -19,12 +19,27 @@ exports.getQuestionForNumber = function (request, response) {
         if ( questionInformation.didQuestionChange) {
             // question has changed, so send updates to slack
             slackApi.sendNewQuestionToSlackUsers(questionInformation);
+
         }
         return response.status(200).json(questionInformation);
     } else {
         return response.status(422).json({"error": "You must provide a question number"});
-    }s
+    }
 };
+
+exports.stopQuiz = function (request, response) {
+
+    var stopResponse = questionApi.stopQuiz(request);
+    if ( stopResponse.error ) {
+        return response.status(422).json(stopResponse.error);
+    }
+
+    var isStoppedStatus = stopResponse.isStopped;
+    slackApi.quizHasStopped();
+    return response.status(200).json({isStopped: isStoppedStatus});
+
+};
+
 
 function checkIsQuizMasterKeyCorrect(request) {
     var quizMasterKey = request.get(QUIZ_KEY_HEADER);

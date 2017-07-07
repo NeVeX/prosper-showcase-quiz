@@ -81,7 +81,6 @@ exports.sendNewQuestionToSlackUsers = function (questionInformation) {
     }
 
     // for each player that is still active and playing - send the question
-    // var slackQuestionToSend = {
     var slackQuestion = questionInformation.question;
     var slackAttachments = [ {
             text: answersRawText,
@@ -186,6 +185,39 @@ exports.slackInteractiveAnswer = function (request, response) {
     return recordSlackAnswer(name, answerNumber, response);
 
 };
+
+exports.quizHasStopped = function() {
+    if ( !slackUserInfo ) {
+        return; // nothing to do
+    }
+    console.log("The quiz is over - so sending a goodbye to everyone that participated");
+    // don't send any more updates to people
+    for ( var slackName in slackUserInfo ) {
+        if (slackUserInfo.hasOwnProperty(slackName)) {
+            // Get the url to post to
+            var channelId = slackUserInfo[slackName].channelId;
+            var wantsToPlay = slackUserInfo[slackName].wantsToPlay;
+            if ( !channelId || !wantsToPlay ) {
+                continue; // they stopped already
+            }
+
+            // Slack won't allow lots of responses in 30 minutes using response_urls :-(
+            request.post({
+                    url:'https://slack.com/api/chat.postMessage',
+                    form: {
+                        token: APPLICATION_SLACK_OAUTH_TOKEN,
+                        channel: channelId,
+                        text: "The quiz is now over - thanks for playing!"
+                    }},
+                function( error, httpResponse, body) {
+                    if (error) {
+                        console.log("There was an error sending the data to slack for the end of the quiz: "+JSON.stringify(error));
+                    }
+                });
+            slackUserInfo[slackName] = {}; // remove the info
+        }
+    }
+}
 
 function isNumber(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);

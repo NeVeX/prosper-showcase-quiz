@@ -30,8 +30,9 @@ app.post('/prosperquiz/test/data', testApi.generateTestData);
 app.get('/prosperquiz/questions', quizMaster.getQuestionForNumber);
 app.get('/prosperquiz/answers', questionsApi.getAnswerForQuestion);
 app.get('/prosperquiz/scores', questionsApi.getCurrentScores);
+app.get('/prosperquiz/stats', questionsApi.getStatisticsForQuestion);
 app.patch('/prosperquiz/scores', questionsApi.reduceScoreBonus);
-app.post('/prosperquiz/stop', questionsApi.stopQuiz);
+app.post('/prosperquiz/stop', quizMaster.stopQuiz);
 app.post('/prosperquiz/pause', questionsApi.pauseQuiz);
 
 app.get('/prosperquiz', function(request, response) {
@@ -43,7 +44,6 @@ app.get('/prosperquiz/start', function(request, response) {
     response.setHeader('Content-Type', 'text/html');
     return response.status(200).end(questionsHtml);
 });
-
 
 module.exports = app;
 var portNumber = 34343;
