@@ -1,9 +1,6 @@
 var fs = require('fs');
 
 module.exports = {
-    startNewGame: function () {
-        return doStartNewGame();
-    },
     changeAnswersLeftDown: function () {
         return doChangeAnswersLeftDown();
     },
@@ -178,7 +175,7 @@ function doRecordPlayerAnswer(name, answer) {
 
 function doRecordPlayerAnswerWithGameState(name, answer, questionInPlay, answersInUse) {
     if ( !questionInPlay ) {
-        return { error: "There is no live quiz at the moment - check back later" }
+        return { error: "Quiz is either temporarily paused or it's already over" }
     }
     var scoreAmount = getScoreAmountForAnswersLeft(answersInUse);
     // console.log("Recording player "+name+" answer "+answer+" for question in play "+questionInPlay);
