@@ -1,5 +1,4 @@
 
-var quizMaster = require('./quiz-master');
 var questionsService = require('./questions-service');
 
 exports.generateTestData = function (request, response) {

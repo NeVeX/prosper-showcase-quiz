@@ -175,7 +175,7 @@ function doRecordPlayerAnswer(name, answer) {
 
 function doRecordPlayerAnswerWithGameState(name, answer, questionInPlay, answersInUse) {
     if ( !questionInPlay ) {
-        return { error: "Quiz is either temporarily paused or it's already over" }
+        return { error: "The quiz is either temporarily paused (between rounds) or it's already over" }
     }
     var scoreAmount = getScoreAmountForAnswersLeft(answersInUse);
     // console.log("Recording player "+name+" answer "+answer+" for question in play "+questionInPlay);
@@ -198,7 +198,7 @@ function doRecordPlayerAnswerWithGameState(name, answer, questionInPlay, answers
 
     if ( correctAnswer == answer) {
         allPlayerScores[name][questionInPlay] = scoreAmount; // Give them the score
-        console.log("Answer given is correct - they get ["+scoreAmount+"] points");
+        // console.log("Answer given is correct - they get ["+scoreAmount+"] points");
     } else {
         allPlayerScores[name][questionInPlay] = 0; // Give them nothing
         // console.log("Answer given is not correct - they get [0] points");

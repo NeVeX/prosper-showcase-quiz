@@ -3,8 +3,6 @@ var questionsService = require('./questions-service');
 
 exports.getQuestionForNumber = function (request, questionNumber) {
 
-    console.log("New request received to getQuestionForNumber");
-
     var questionToReturn = questionsService.getQuestionForNumber(questionNumber);
     if ( questionToReturn) {
         questionToReturn.didQuestionChange = false;
@@ -19,7 +17,6 @@ exports.getQuestionForNumber = function (request, questionNumber) {
 };
 
 exports.getAnswerForQuestion = function (request, response) {
-    console.log("New request received to /prosperquiz/answers");
 
     if ( ! request.nevex.isQuizMaster ) {
         return response.status(403).json({"error": "You are not authorized to view answers"});
@@ -39,12 +36,10 @@ exports.getAnswerForQuestion = function (request, response) {
 };
 
 exports.getCurrentScores = function (request, response) {
-    console.log("New GET request received to /prosperquiz/scores");
     return response.status(200).json(questionsService.getCurrentScores());
 };
 
 exports.reduceScoreBonus = function (request, response) {
-    console.log("New PATCH request received to /prosperquiz/scores");
     if ( request.nevex.isQuizMaster ) {
         // By default we decrease the score...
         var newScoreAmount = questionsService.changeAnswersLeftDown();
@@ -56,7 +51,6 @@ exports.reduceScoreBonus = function (request, response) {
 
 
 exports.stopQuiz = function (request, response) {
-    console.log("New POST request received to /prosperquiz/stop");
     if ( request.nevex.isQuizMaster ) {
         var isStopped = questionsService.stopQuiz();
         return response.status(200).json({"isStopped": isStopped});
@@ -66,7 +60,6 @@ exports.stopQuiz = function (request, response) {
 };
 
 exports.pauseQuiz = function (request, response) {
-    console.log("New POST request received to /prosperquiz/pause");
     if ( request.nevex.isQuizMaster ) {
         var isPaused = questionsService.pauseQuiz();
         return response.status(200).json({"isPaused": isPaused});

@@ -21,13 +21,11 @@ app.use(function(request, response, next) {
     request.nevex = {};
     // Set a simple boolean to indicate if this request is from the quiz master
     request.nevex.isQuizMaster = quizMaster.isQuizMasterKeyCorrect(request);
-    console.log("Is this request from a quiz master? "+request.nevex.isQuizMaster);
     next();
 });
 
-app.post('/prosperquiz/slack', slackApi.slackAnswer);
-app.post('/prosperquiz/slack/interactiveAnswer', slackApi.slackInteractiveAnswer);
-app.post('/prosperquiz/slack/interactive', slackApi.slackInteractive);
+app.post('/prosperquiz/slack', slackApi.slackInteractive);
+app.post('/prosperquiz/slack/interactive', slackApi.slackInteractiveAnswer);
 app.post('/prosperquiz/test/data', testApi.generateTestData);
 app.get('/prosperquiz/questions', quizMaster.getQuestionForNumber);
 app.get('/prosperquiz/answers', questionsApi.getAnswerForQuestion);
@@ -37,13 +35,11 @@ app.post('/prosperquiz/stop', questionsApi.stopQuiz);
 app.post('/prosperquiz/pause', questionsApi.pauseQuiz);
 
 app.get('/prosperquiz', function(request, response) {
-    console.log("New GET request received to /prosperquiz");
     response.setHeader('Content-Type', 'text/html');
     return response.status(200).end(landingPageHtml);
 });
 
 app.get('/prosperquiz/start', function(request, response) {
-    console.log("New GET request received to /prosperquiz/start");
     response.setHeader('Content-Type', 'text/html');
     return response.status(200).end(questionsHtml);
 });
