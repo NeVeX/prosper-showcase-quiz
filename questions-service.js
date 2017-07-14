@@ -34,7 +34,7 @@ module.exports = {
 };
 
 // Read the latest file
-var questionsJson = fs.readFileSync('config/questions.2017-07-07.json');
+var questionsJson = fs.readFileSync('config/questions.2017-07-14.json');
 
 if ( !questionsJson ) {
     throw Error("Did not load questions from json file");

@@ -2,12 +2,19 @@ $( document ).ready(function() {
     init();
 });
 
+var ANSWER_DIV_ONE = "#answer-div-one";
+var ANSWER_DIV_TWO = "#answer-div-two";
+var ANSWER_DIV_THREE = "#answer-div-three";
+var ANSWER_DIV_FOUR = "#answer-div-four";
+
 var quizMasterKey;
 
 function init() {
 
     $("#scores-div").hide();
-    fadeAllTheAnswers();
+    fadeAllAnswers();
+    $("#timer-text").fadeTo(1, 0);
+    hideChart();
 
     console.log( "question-control.js activated" );
     quizMasterKey = localStorage.getItem("quiz-master-key"); // may or may not be set
@@ -36,21 +43,27 @@ function getQuestion(questionNumber) {
 	})	
 }
 
-function fadeAllTheAnswers() {
-    hideAnswerDiv(1, 1);
-    hideAnswerDiv(2, 1);
-    hideAnswerDiv(3, 1);
-    hideAnswerDiv(4, 1);
-    $("#timer-text").fadeTo(1, 0);
-    hideChart();
+function fadeAllAnswers() {
+    fadeAnswerDiv(1, 1);
+    fadeAnswerDiv(2, 1);
+    fadeAnswerDiv(3, 1);
+    fadeAnswerDiv(4, 1);
 }
 
-function resetHiddenAnswers() {
-    $("#answer-div-one").fadeTo(1, 1);
-    $("#answer-div-two").fadeTo(1, 1);
-    $("#answer-div-three").fadeTo(1, 1);
-    $("#answer-div-four").fadeTo(1, 1);
+function fadeAllAnswersToVisible() {
+    $(ANSWER_DIV_ONE).fadeTo(1, 1);
+    $(ANSWER_DIV_TWO).fadeTo(1, 1);
+    $(ANSWER_DIV_THREE).fadeTo(1, 1);
+    $(ANSWER_DIV_FOUR).fadeTo(1, 1);
     $("#timer-text").fadeTo(1, 1);
+}
+
+function showAllAnswers() {
+    $("#all-questions-div").show();
+}
+
+function hideAllAnswers() {
+    $("#all-questions-div").hide();
 }
 
 function onQuizDataReturned(questionNumber, data) {
@@ -67,13 +80,13 @@ function onQuizDataReturned(questionNumber, data) {
         howManyQuestionsInPlay++;
         $("#answer-text-three").html(data.answerThree);
     } else {
-        hideAnswerDiv(3, 1);
+        fadeAnswerDiv(3, 1);
     }
     if ( data.answerFour) {
         howManyQuestionsInPlay++;
         $("#answer-text-four").html(data.answerFour);
     } else {
-        hideAnswerDiv(4, 1);
+        fadeAnswerDiv(4, 1);
     }
     var isMoreQuestions = questionNumber < data.totalQuestions;
 
@@ -83,8 +96,8 @@ function onQuizDataReturned(questionNumber, data) {
 
 function showAllTheAnswers(questionNumber, data, howManyQuestionsInPlay, isMoreQuestions) {
     // Reset everything from the previous round
-    resetHiddenAnswers();
-
+    fadeAllAnswersToVisible();
+    showAllAnswers();
     startAllTheTimers(data.timeAllowed, howManyQuestionsInPlay, questionNumber, isMoreQuestions);
 }
 
@@ -127,16 +140,16 @@ function getAnswerToQuestionAndStartTimers(currentQuestion, howManyQuestionsInPl
 
 function getAnswerDivIdForNumber(number) {
     if ( number === 1) {
-        return "#answer-div-one";
+        return ANSWER_DIV_ONE;
     }
     if ( number === 2) {
-        return "#answer-div-two";
+        return ANSWER_DIV_TWO;
     }
     if ( number === 3) {
-        return "#answer-div-three";
+        return ANSWER_DIV_THREE;
     }
     if ( number === 4) {
-        return "#answer-div-four";
+        return ANSWER_DIV_FOUR;
     }
 }
 
@@ -174,7 +187,7 @@ function startQuestionRemovalTimerUsingGivenCorrectAnswer(answerNumber, howManyQ
 
 }
 
-function hideAnswerDiv(answerNumber, timeToFade) {
+function fadeAnswerDiv(answerNumber, timeToFade) {
     $(getAnswerDivIdForNumber(answerNumber)).fadeTo(timeToFade, 0); // hide it
 }
 
@@ -224,30 +237,35 @@ function onAnswerToQuestionReturned(answer, currentQuestion, isMoreQuestions, ho
     var i;
     for ( i = 1; i <= 4; i++) {
         if ( !(i === answer)) {
-            hideAnswerDiv(i, 1000);
+            fadeAnswerDiv(i, 1000);
         }
     }
 
-    showChartData(currentQuestion, howManyAnswersInPlay);
-
     var showAnswerInterval = setInterval(function() {
         clearInterval(showAnswerInterval); // stop it
-        hideAnswerDiv(answer, 1);
-        if ( isMoreQuestions) {
-            getQuestion(currentQuestion + 1); // go to the next question
-        } else {
-            onGameOver();
-        }
-    }, 7000); // show it for a few seconds
+        fadeAnswerDiv(answer, 1);
+        hideAllAnswers();
+        showChartData(currentQuestion, isMoreQuestions, howManyAnswersInPlay);
+
+    }, 2000); // show it for a 2 seconds
 }
 
-function showChartData(currentQuestion, totalAnswersInPlay) {
+function showChartData(currentQuestion, isMoreQuestions, totalAnswersInPlay) {
     $.ajax({
         type: "GET",
         headers: { "Quiz-Key" : quizMasterKey },
         url: "stats?number="+currentQuestion,
         success: function(data) {
+
             showChartStatisticsForQuestion(data, totalAnswersInPlay);
+
+            setTimeout(function () {
+                if ( isMoreQuestions) {
+                    getQuestion(currentQuestion + 1); // go to the next question
+                } else {
+                    onGameOver();
+                }
+            }, 6000); // Leave the chart on screen for about 6 seconds
         },
         error: function(error) {
             if ( quizMasterKey ) {
@@ -294,14 +312,26 @@ function onGameOver() {
     console.log("GAME OVER");
 
     $("#question-text").html("Quiz Over!<br>Now calculating the results...");
-    fadeAllTheAnswers();
+    fadeAllAnswers();
     $("#help-text-div").hide();
     $("#answers-and-chart-div").hide();
+    hideChart();
     // Give the illusion of anticipation
     setTimeout(fetchScoresOnGameOver, 6000);
 }
 
 function fetchScoresOnGameOver() {
+    $.ajax({
+        type: "GET",
+        url: "scores",
+        success: function(data) {
+            onScoresReturned(data);
+        },
+        error: function(error) {
+            onError(error);
+        }
+    });
+
     $.ajax({
         type: "POST",
         url: "stop",
@@ -311,17 +341,6 @@ function fetchScoresOnGameOver() {
         },
         error: function(error) {
             console.log("Error occurred while asking to stop the game: "+error);
-        }
-    });
-
-    $.ajax({
-        type: "GET",
-        url: "scores",
-        success: function(data) {
-            onScoresReturned(data);
-        },
-        error: function(error) {
-            onError(error);
         }
     });
 }

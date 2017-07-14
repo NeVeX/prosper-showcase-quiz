@@ -35,8 +35,8 @@ exports.getAnswerForQuestion = function (request, response) {
     }
 };
 
-exports.getCurrentScores = function (request, response) {
-    return response.status(200).json(questionsService.getCurrentScores());
+exports.getCurrentScores = function () {
+    return questionsService.getCurrentScores();
 };
 
 exports.reduceScoreBonus = function (request, response) {

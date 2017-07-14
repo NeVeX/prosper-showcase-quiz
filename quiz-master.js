@@ -1,4 +1,9 @@
-var QUIZ_MASTER_KEY = "nevex";
+var QUIZ_MASTER_KEY = process.env.QUIZ_MASTER_KEY;
+
+if ( !QUIZ_MASTER_KEY) {
+    throw new Error("No quiz master key defined");
+}
+
 var QUIZ_KEY_HEADER = "Quiz-Key";
 
 var questionApi = require('./questions-api');
@@ -38,6 +43,16 @@ exports.stopQuiz = function (request, response) {
     slackApi.quizHasStopped();
     return response.status(200).json({isStopped: isStoppedStatus});
 
+};
+
+exports.getCurrentScores = function (request, response) {
+    var currentScores = questionApi.getCurrentScores();
+    if ( !currentScores ) {
+        return response.status(500).json({error: "Could not get current scores"});
+    }
+    // The current scores are not filled with user information, so get user info before returning
+    var updatedCurrentScores = slackApi.updateCurrentScoresWithUserInfo(currentScores);
+    return response.status(200).json(updatedCurrentScores);
 };
 
 

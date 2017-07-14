@@ -19,6 +19,9 @@
 }
 
 .chart-div {
+    display: inline-flex;
+    height: 50%;
+    width: 50%;
     /*position: absolute;*/
     margin-right: 0px;
     margin-left: 20px;
