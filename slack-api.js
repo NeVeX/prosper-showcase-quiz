@@ -44,14 +44,15 @@ exports.slackInteractive = function (request, response) {
     // check the text entered
     if ( textEntered === 'play') {
         console.log("Player ["+name+"] with userId ["+userId+"] has opted to join the quiz");
-        updateSlackUserInfo(name, true, userId, slashCommandChannelId);
-        return response.status(200).json( { text: "Hurrah! You're now part of the interactive quiz - good luck!"} );
+        addSlackUserInfo(name, true, userId, slashCommandChannelId);
+        return response.status(200).json( { text: "Hurrah! You've registered to be part of the amazing quiz extravaganza!"} );
     } else if ( textEntered === 'stop') {
         console.log("Player ["+name+"] has opted to stop playing in the the quiz");
         removeSlackUserFromQuiz(name);
-        return response.status(200).json( { text: "Ok - I won't annoy you anymore with this quiz"} );
+        return response.status(200).json( { text: "You got it! I won't annoy you anymore with the quiz"} );
     }
     else {
+        addSlackNonInteractiveUserIfNotFound(name, userId, slashCommandChannelId);
         // We'll just treat this like they are answering normally (i.e. /quiz 2)
         return recordSlackAnswer(name, textEntered, response);
     }
@@ -108,8 +109,8 @@ exports.sendNewQuestionToSlackUsers = function (questionInformation) {
         if (slackUserInfo.hasOwnProperty(slackName)) {
             // Get the url to post to
             var personalChannelId = slackUserInfo[slackName].personalChannelId;
-            var wantsToPlay = slackUserInfo[slackName].wantsToPlay;
-            if ( !personalChannelId || !wantsToPlay ) {
+            var wantsToPlayInteractively = slackUserInfo[slackName].wantsToPlayInteractively;
+            if ( !personalChannelId || !wantsToPlayInteractively ) {
                 continue; // don't annoy this person
             }
 
@@ -156,7 +157,7 @@ function recordSlackAnswer(name, answer, response) {
 
     var scoreResult = questionService.recordPlayerAnswer(name, answer);
     if ( scoreResult && !scoreResult.error ) {
-        return response.status(200).json({"text": "Thank you for your answer to question "+scoreResult.currentQuestion});
+        return response.status(200).json({"text": "Cool, got your answer to question "+scoreResult.currentQuestion});
     } else {
         if ( scoreResult.error) {
             // needs to be a 200 for slack response
@@ -167,17 +168,23 @@ function recordSlackAnswer(name, answer, response) {
     }
 }
 
-function updateSlackUserInfo(name, wantsToPlay, userId, slashCommandChannelId) {
+function addSlackNonInteractiveUserIfNotFound(name, userId, slashCommandChannelId) {
+    if ( !(name in slackUserInfo) ) {
+        // we don't have this user - so let's add him
+        addSlackUserInfo(name, false, userId, slashCommandChannelId); // set interactivity to false
+    }
+}
+
+function addSlackUserInfo(name, wantsToPlayInteractively, userId, slashCommandChannelId) {
     if ( !(name in slackUserInfo) ) {
         slackUserInfo[name] = {};
     }
     var playerInfo = {};
-    playerInfo.wantsToPlay = wantsToPlay;
+    playerInfo.wantsToPlayInteractively = wantsToPlayInteractively;
     playerInfo.userId = userId;
     playerInfo.slashCommandChannelId = slashCommandChannelId;
     slackUserInfo[name] = playerInfo;
 
-    setPersonalChannelIdForUser(playerInfo);
     setProfileInfoForUser(playerInfo);
 }
 
@@ -186,7 +193,7 @@ function removeSlackUserFromQuiz(name) {
         var userInfo = slackUserInfo[name];
         userInfo.personalChannelId = null;
         userInfo.slashCommandChannelId = null;
-        userInfo.wantsToPlay = false;
+        userInfo.wantsToPlayInteractively = false;
     }
 }
 
@@ -208,8 +215,9 @@ function setPersonalChannelIdForUser(playerInfo) {
                     var parsedBody = JSON.parse(body);
                     if ( parsedBody && parsedBody.channel && parsedBody.channel.id) {
                         playerInfo.personalChannelId = parsedBody.channel.id;
-                        if ( !playerInfo.slashCommandChannelId || (playerInfo.slashCommandChannelId != playerInfo.personalChannelId)) {
-                            sendSimpleSlackMessageToChannel(playerInfo.personalChannelId, "Hi there - so just letting you know, we'll play the quiz in this channel");
+                        if ( playerInfo.personalChannelId && playerInfo.wantsToPlayInteractively ) {
+                            var message = "Oh hi "+playerInfo.firstName+"! I'll post the quiz questions for you, here in this channel.";
+                            sendSimpleSlackMessageToChannel(playerInfo.personalChannelId, message);
                         }
                     }
                 }
@@ -239,10 +247,11 @@ function setProfileInfoForUser(playerInfo) {
 
                 var firstName = parsedBody.profile.first_name;
                 var lastName = parsedBody.profile.last_name;
-                var email = parsedBody.profile.email; // might need this later...
                 if ( firstName && lastName ) {
                     playerInfo.firstName = firstName;
                     playerInfo.lastName = lastName;
+
+                    setPersonalChannelIdForUser(playerInfo);
                 }
             }
         }
@@ -290,29 +299,41 @@ exports.updateCurrentScoresWithUserInfo = function (currentScores) {
     return currentScores; // return the (possibly) updated data
 };
 
+exports.quizHasStarted = function () {
+    var message = "The quiz has now started! Get ready for some tasty questions! :-)";
+    sendSimpleSlackMessageToAllUsers(message, false);
+};
+
 exports.quizHasStopped = function() {
+    console.log("The quiz is over - so sending a goodbye to everyone that participated");
+    var message = "The quiz is now over - thanks for playing, I hope you had fun!";
+    sendSimpleSlackMessageToAllUsers(message, true);
+};
+
+function sendSimpleSlackMessageToAllUsers(message, shouldRemoveUsersAfterSending) {
     if ( !slackUserInfo ) {
         return; // nothing to do
     }
-    console.log("The quiz is over - so sending a goodbye to everyone that participated");
     // don't send any more updates to people
     for ( var slackName in slackUserInfo ) {
         if (slackUserInfo.hasOwnProperty(slackName)) {
             // Get the url to post to
             var personalChannelId = slackUserInfo[slackName].personalChannelId;
-            var wantsToPlay = slackUserInfo[slackName].wantsToPlay;
-            if ( !personalChannelId || !wantsToPlay ) {
-                continue; // they stopped already
+            var wantsToPlayInteractively = slackUserInfo[slackName].wantsToPlayInteractively;
+            if ( !personalChannelId || !wantsToPlayInteractively ) {
+                continue; // they do not want to be bothered, so skip this person
             }
 
-            // Slack won't allow lots of responses in 30 minutes using response_urls :-(
-            var message = "The quiz is now over - thanks for playing, I hope you had fun!";
             sendSimpleSlackMessageToChannel(personalChannelId, message);
-            slackUserInfo[slackName].wantsToPlay = false;
-            slackUserInfo[slackName].personalChannelId = null;
+
+            if ( shouldRemoveUsersAfterSending ) {
+                // This is the last message we should send to this person
+                slackUserInfo[slackName].wantsToPlayInteractively = false;
+                slackUserInfo[slackName].personalChannelId = null;
+            }
         }
     }
-};
+}
 
 function sendSimpleSlackMessageToChannel(channelId, message) {
     request.post({

@@ -2,6 +2,10 @@ $( document ).ready(function() {
     init();
 });
 
+var QUESTION_SHOWN_WITHOUT_ANSWERS_TIME_MS = 5000;
+var CORRECT_ANSWER_SHOWN_TIME_MS = 3000;
+var SHOW_GAME_OVER_TIME_MS = 5500;
+
 var ANSWER_DIV_ONE = "#answer-div-one";
 var ANSWER_DIV_TWO = "#answer-div-two";
 var ANSWER_DIV_THREE = "#answer-div-three";
@@ -25,7 +29,27 @@ function init() {
         startQuestion = parseInt(queryStartOverride);
     }
     console.log("Starting question from "+startQuestion);
+    if ( startQuestion === 1) {
+        startNewQuiz(); // only start new quiz on question 1
+    }
     getQuestion(startQuestion);
+}
+
+function startNewQuiz() {
+    console.log("Starting a new quiz");
+    $.ajax({
+        type: "POST",
+        headers: { "Quiz-Key" : quizMasterKey},
+        url: "start",
+        success: function(data) {
+            console.log("Quiz started response: "+JSON.stringify(data));
+        },
+        error: function(error) {
+            if ( quizMasterKey ) {
+                onError(error); // only error on when we are the quiz master
+            }
+        }
+    })
 }
 
 function getQuestion(questionNumber) {
@@ -90,14 +114,16 @@ function onQuizDataReturned(questionNumber, data) {
     }
     var isMoreQuestions = questionNumber < data.totalQuestions;
 
-    setTimeout(showAllTheAnswers, 3000, questionNumber, data, howManyQuestionsInPlay, isMoreQuestions);
+    setTimeout(showAllTheAnswers, QUESTION_SHOWN_WITHOUT_ANSWERS_TIME_MS, questionNumber, data, howManyQuestionsInPlay, isMoreQuestions);
 
 }
 
 function showAllTheAnswers(questionNumber, data, howManyQuestionsInPlay, isMoreQuestions) {
+    sendQuestionToSlackUsers(questionNumber);
+    unPauseTheQuiz();
     // Reset everything from the previous round
-    fadeAllAnswersToVisible();
     showAllAnswers();
+    fadeAllAnswersToVisible();
     startAllTheTimers(data.timeAllowed, howManyQuestionsInPlay, questionNumber, isMoreQuestions);
 }
 
@@ -115,9 +141,32 @@ function startAllTheTimers(timeAllowed, howManyQuestionsInPlay, currentQuestion,
             clearInterval(timeLeftInterval);
             onTimeElapsedForQuestion(currentQuestion, isMoreQuestions, howManyQuestionsInPlay);
         }
-    },1000);
+    }, 1000);
 
     getAnswerToQuestionAndStartTimers(currentQuestion, howManyQuestionsInPlay, timeForEachQuestionMs);
+}
+
+function sendQuestionToSlackUsers(questionNumber) {
+    console.log("Sending new question ["+questionNumber+"] to slack users");
+
+    $.ajax({
+        type: "POST",
+        url: "slack/sendquestion",
+        headers: { "Content-Type": "application/json", "Quiz-Key" : quizMasterKey },
+        data: JSON.stringify( { number: questionNumber } ),
+        success: function(data) {
+            console.log("Response to sending question ["+questionNumber+"] to slack: "+JSON.stringify(data));
+        },
+        error: function(error) {
+            if ( quizMasterKey ) {
+                onError("Could not send question to slack users");
+            } else {
+                console.log("Error response occurred when sending question to slack users, but we don't care");
+            }
+        }
+    });
+
+
 }
 
 // TODO: Remove this duplicated code - merge it below
@@ -247,7 +296,7 @@ function onAnswerToQuestionReturned(answer, currentQuestion, isMoreQuestions, ho
         hideAllAnswers();
         showChartData(currentQuestion, isMoreQuestions, howManyAnswersInPlay);
 
-    }, 2000); // show it for a 2 seconds
+    }, CORRECT_ANSWER_SHOWN_TIME_MS); // show it for a 2 seconds
 }
 
 function showChartData(currentQuestion, isMoreQuestions, totalAnswersInPlay) {
@@ -281,17 +330,36 @@ function pauseQuiz() {
         url: "pause",
         headers: { "Content-Type": "application/json", "Quiz-Key" : quizMasterKey },
         success: function(data) {
-            console.log("Response to pausing game: "+data.message);
+            console.log("Response to pausing quiz: "+JSON.stringify(data));
         },
         error: function(error) {
-            if ( quizMasterKey /*&& !(error.status === 403)*/) {
-                onError("Could not pause game");
+            if ( quizMasterKey ) {
+                onError("Could not pause quiz");
             } else {
-                console.log("Error response occurred, but we don't care");
+                console.log("Error response occurred to pausing quiz, but we don't care");
             }
         }
     });
 }
+
+function unPauseTheQuiz() {
+    $.ajax({
+        type: "POST",
+        url: "unpause",
+        headers: { "Content-Type": "application/json", "Quiz-Key" : quizMasterKey },
+        success: function(data) {
+            console.log("Response to un-pausing quiz: "+JSON.stringify(data));
+        },
+        error: function(error) {
+            if ( quizMasterKey ) {
+                onError("Could not un-pause quiz");
+            } else {
+                console.log("Error response occurred to un-pausing quiz, but we don't care");
+            }
+        }
+    });
+}
+
 
 function getParameterByName(sParam) {
     var sPageURL = decodeURIComponent(window.location.search.substring(1)),
@@ -317,7 +385,7 @@ function onGameOver() {
     $("#answers-and-chart-div").hide();
     hideChart();
     // Give the illusion of anticipation
-    setTimeout(fetchScoresOnGameOver, 6000);
+    setTimeout(fetchScoresOnGameOver, SHOW_GAME_OVER_TIME_MS);
 }
 
 function fetchScoresOnGameOver() {
