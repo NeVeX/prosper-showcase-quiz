@@ -11,6 +11,13 @@ To play, this node app is shown on screen and simultaneously will accept slack c
 * All interactive slack messages are sent to the personal user channel - fixing the public channel issue 
 * Scores are updated with full names now (where users use the `/quiz play` command)
 * Changed some UI flows - all text disappears and then the chart shows after each question
+* Updated UI elements 
+* Added post question statistics (shows who is answering what)
+* Removed the chart because it's not great 
+* Added more slack API integrations (getting profile information and personal channel id's)
+* Updated sending `postMessage` to use the `@username` to post in the `slackbot` channel
+* Updated stats API
+* Added `unpause`, `start`, `sendquestions` API's
 
 #### `1.2.0`
 
