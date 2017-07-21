@@ -51,13 +51,36 @@ exports.getStatisticsForQuestion = function(questionNumber) {
     if ( !statsQuestion ) {
         return { error: "There are no stats at this time"};
     }
-    return {
-        answerOne: ( statsQuestion[1] ? statsQuestion[1] : 0),
-        answerTwo: (statsQuestion[2] ? statsQuestion[2] : 0),
-        answerThree: (statsQuestion[3] ? statsQuestion[3] : 0),
-        answerFour: (statsQuestion[4] ? statsQuestion[4] : 0),
-        totalAnswers: statsQuestion.totalAnswers
+
+    var totalAnswers = statsQuestion.totalAnswers ? statsQuestion.totalAnswers : 0;
+    var answerOneCount = statsQuestion[1] ? statsQuestion[1] : 0;
+    var answerTwoCount = statsQuestion[2] ? statsQuestion[2] : 0;
+    var answerThreeCount = statsQuestion[3] ? statsQuestion[3] : 0;
+    var answerFourCount = statsQuestion[4] ? statsQuestion[4] : 0;
+
+    // Calculate percentages
+    var answerOnePercent = 0, answerTwoPercent = 0, answerThreePercent = 0, answerFourPercent = 0;
+    if ( totalAnswers > 0 ) {
+        answerOnePercent = Math.round((answerOneCount / totalAnswers) * 100);
+        answerTwoPercent = Math.round((answerTwoCount / totalAnswers) * 100);
+        answerThreePercent = Math.round((answerThreeCount / totalAnswers) * 100);
+        answerFourPercent = Math.round((answerFourCount / totalAnswers) * 100);
     }
+
+    return {
+        "answerOneCount": answerOneCount,
+        "answerTwoCount" : answerTwoCount,
+        "answerThreeCount": answerThreeCount,
+        "answerFourCount": answerFourCount,
+
+        "answerOnePercent" : answerOnePercent,
+        "answerTwoPercent" : answerTwoPercent,
+        "answerThreePercent" : answerThreePercent,
+        "answerFourPercent" : answerFourPercent,
+
+        "totalAnswers": totalAnswers
+    }
+
 };
 
 exports.generateTestData = function() {
@@ -183,7 +206,7 @@ function recordPlayerAnswerWithGameState(name, answerGiven, questionInPlay, answ
         return { error: "The quiz is over - no more answers can be accepted" }
     }
     if ( isQuizPaused ) {
-        return { error: "The quiz is paused - no more answers can be accepted for question "+questionInPlay }
+        return { error: "Question "+questionInPlay+" is currently not accepting answers, since the round is either waiting to start, or has finished already" }
     }
 
     var scoreAmount = getScoreAmountForAnswersLeft(answersInUse);
@@ -211,7 +234,9 @@ function recordPlayerAnswerWithGameState(name, answerGiven, questionInPlay, answ
         allPlayerScores[name][questionInPlay] = 0; // Give them nothing
     }
 
-    updateStatistics(questionInPlay, answerGiven);
+    if ( answerGiven > 0 && answerGiven <= getTotalAnswersForQuestion(currentQuestion) ) {
+        updateStatistics(questionInPlay, answerGiven);
+    }
 
     return { currentQuestion: questionInPlay};
 }

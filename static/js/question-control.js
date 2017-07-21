@@ -5,20 +5,26 @@ $( document ).ready(function() {
 var QUESTION_SHOWN_WITHOUT_ANSWERS_TIME_MS = 5000;
 var CORRECT_ANSWER_SHOWN_TIME_MS = 3000;
 var SHOW_GAME_OVER_TIME_MS = 5500;
+var SHOW_STATS_TIME_MS = 6000;
+var ANSWER_WRONG_CLASS_NAME = "answer-wrong";
 
 var ANSWER_DIV_ONE = "#answer-div-one";
 var ANSWER_DIV_TWO = "#answer-div-two";
 var ANSWER_DIV_THREE = "#answer-div-three";
 var ANSWER_DIV_FOUR = "#answer-div-four";
 
+var ANSWER_QUESTION_PREFIX = "#answer-prefix-";
+var ANSWER_PREFIX = "#answer-text-";
+var ANSWER_STAT_PREFIX = "#answer-percent-stat-";
+
 var quizMasterKey;
 
 function init() {
 
     $("#scores-div").hide();
-    fadeAllAnswers();
+    fadeAllAnswerDivsToOpacityZero();
     $("#timer-text").fadeTo(1, 0);
-    hideChart();
+    // hideChart();
 
     console.log( "question-control.js activated" );
     quizMasterKey = localStorage.getItem("quiz-master-key"); // may or may not be set
@@ -67,35 +73,14 @@ function getQuestion(questionNumber) {
 	})	
 }
 
-function fadeAllAnswers() {
-    fadeAnswerDiv(1, 1);
-    fadeAnswerDiv(2, 1);
-    fadeAnswerDiv(3, 1);
-    fadeAnswerDiv(4, 1);
-}
-
-function fadeAllAnswersToVisible() {
-    $(ANSWER_DIV_ONE).fadeTo(1, 1);
-    $(ANSWER_DIV_TWO).fadeTo(1, 1);
-    $(ANSWER_DIV_THREE).fadeTo(1, 1);
-    $(ANSWER_DIV_FOUR).fadeTo(1, 1);
-    $("#timer-text").fadeTo(1, 1);
-}
-
-function showAllAnswers() {
-    $("#all-questions-div").show();
-}
-
-function hideAllAnswers() {
-    $("#all-questions-div").hide();
-}
-
 function onQuizDataReturned(questionNumber, data) {
+
+    resetAllAnswersForNewQuestion();
 
     console.log("Got data back from quiz api: "+data);
     // show the question for a moment
     $("#question-text").html(data.question);
-    hideChart();
+    // hideChart();
     $("#answer-text-one").html(data.answerOne);
     $("#answer-text-two").html(data.answerTwo);
     var howManyQuestionsInPlay = 2;
@@ -104,13 +89,13 @@ function onQuizDataReturned(questionNumber, data) {
         howManyQuestionsInPlay++;
         $("#answer-text-three").html(data.answerThree);
     } else {
-        fadeAnswerDiv(3, 1);
+        fadeAnswerDivToOpacityZero(3, 1);
     }
     if ( data.answerFour) {
         howManyQuestionsInPlay++;
         $("#answer-text-four").html(data.answerFour);
     } else {
-        fadeAnswerDiv(4, 1);
+        fadeAnswerDivToOpacityZero(4, 1);
     }
     var isMoreQuestions = questionNumber < data.totalQuestions;
 
@@ -119,12 +104,13 @@ function onQuizDataReturned(questionNumber, data) {
 }
 
 function showAllTheAnswers(questionNumber, data, howManyQuestionsInPlay, isMoreQuestions) {
-    sendQuestionToSlackUsers(questionNumber);
-    unPauseTheQuiz();
-    // Reset everything from the previous round
-    showAllAnswers();
-    fadeAllAnswersToVisible();
-    startAllTheTimers(data.timeAllowed, howManyQuestionsInPlay, questionNumber, isMoreQuestions);
+    sendQuestionToSlackUsers(questionNumber, function () {
+        unPauseTheQuiz();
+        // Reset everything from the previous round
+        showAllAnswers();
+        startAllTheTimers(data.timeAllowed, howManyQuestionsInPlay, questionNumber, isMoreQuestions);
+    });
+
 }
 
 function startAllTheTimers(timeAllowed, howManyQuestionsInPlay, currentQuestion, isMoreQuestions) {
@@ -146,7 +132,7 @@ function startAllTheTimers(timeAllowed, howManyQuestionsInPlay, currentQuestion,
     getAnswerToQuestionAndStartTimers(currentQuestion, howManyQuestionsInPlay, timeForEachQuestionMs);
 }
 
-function sendQuestionToSlackUsers(questionNumber) {
+function sendQuestionToSlackUsers(questionNumber, onSuccessFunction) {
     console.log("Sending new question ["+questionNumber+"] to slack users");
 
     $.ajax({
@@ -156,6 +142,7 @@ function sendQuestionToSlackUsers(questionNumber) {
         data: JSON.stringify( { number: questionNumber } ),
         success: function(data) {
             console.log("Response to sending question ["+questionNumber+"] to slack: "+JSON.stringify(data));
+            onSuccessFunction();
         },
         error: function(error) {
             if ( quizMasterKey ) {
@@ -202,41 +189,125 @@ function getAnswerDivIdForNumber(number) {
     }
 }
 
+function getWordForNumber(number) {
+    if ( number === 1) {
+        return "one";
+    }
+    if ( number === 2) {
+        return "two";
+    }
+    if ( number === 3) {
+        return "three";
+    }
+    if ( number === 4) {
+        return "four";
+    }
+}
+
 function startQuestionRemovalTimerUsingGivenCorrectAnswer(answerNumber, howManyQuestionsInPlay, timeForEachQuestionMs) {
 
-    var answerDivIdsThatCanBeRemoved = [];
+    var answerNumbersThatCanBeRemoved = [];
     var i;
     for( i = 1; i <= 4; i++) {
         if ( !(answerNumber === i) && i <= howManyQuestionsInPlay ) {
-            answerDivIdsThatCanBeRemoved.push(getAnswerDivIdForNumber(i));
+            answerNumbersThatCanBeRemoved.push(i);
         }
     }
 
     var fadeOutAnswerInterval = setInterval(function() {
         if ( howManyQuestionsInPlay <= 2) {
             clearInterval(fadeOutAnswerInterval); // stop it
-            console.log("Only 2 or fewer questions remain - not fading anymore")
+            console.log("Only 2 or fewer questions remain - not fading anymore");
             return; // nothing to do
         }
         // randomize!
-        var itemToFadeOut = Math.floor(Math.random() * answerDivIdsThatCanBeRemoved.length);
-        var itemDivId = answerDivIdsThatCanBeRemoved[itemToFadeOut];
-        console.log("Will fade out answer div: "+itemDivId);
+        var randomIndexToRemove = Math.floor(Math.random() * answerNumbersThatCanBeRemoved.length);
+        var answerNumberToMarkWrong = answerNumbersThatCanBeRemoved[randomIndexToRemove];
+        console.log("Will mark answer div: "+answerNumberToMarkWrong+" as wrong");
         // $(itemDivId).animate({ opacity: 0 }); // fade it out, but keep the elements in tact (no fadeOut)
         reduceAnswerScoreAmount();
-        $(itemDivId).fadeTo(1550, 0);
+
+        // $(itemDivId).fadeTo(1550, 0);
+        // $(itemDivId).addClass(ANSWER_WRONG_CLASS_NAME);
+
+        addWrongAnswerClassToQuestion(answerNumberToMarkWrong);
+
         --howManyQuestionsInPlay; // less questions in play now
 
         // Remove the item from the array now
-        var indexOfDiv = answerDivIdsThatCanBeRemoved.indexOf(itemDivId);
+        var indexOfDiv = answerNumbersThatCanBeRemoved.indexOf(answerNumberToMarkWrong);
         if(indexOfDiv != -1) {
-            answerDivIdsThatCanBeRemoved.splice(indexOfDiv, 1);
+            answerNumbersThatCanBeRemoved.splice(indexOfDiv, 1);
         }
     }, timeForEachQuestionMs);
 
 }
 
-function fadeAnswerDiv(answerNumber, timeToFade) {
+function removeWrongAnswerClassToQuestion(questionNumber) {
+    changeWrongClassForAnswer(questionNumber, false);
+}
+
+function addWrongAnswerClassToQuestion(questionNumber) {
+    changeWrongClassForAnswer(questionNumber, true);
+}
+
+function changeWrongClassForAnswer(questionNumber, isAddingClass) {
+
+    var questionPrefix = ANSWER_QUESTION_PREFIX + getWordForNumber(questionNumber);
+    var answer = ANSWER_PREFIX + getWordForNumber(questionNumber);
+    var stats = ANSWER_STAT_PREFIX + getWordForNumber(questionNumber);
+
+    if ( isAddingClass ) {
+        $(questionPrefix).addClass(ANSWER_WRONG_CLASS_NAME);
+        $(answer).addClass(ANSWER_WRONG_CLASS_NAME);
+        $(stats).addClass(ANSWER_WRONG_CLASS_NAME);
+    } else {
+        $(questionPrefix).removeClass(ANSWER_WRONG_CLASS_NAME);
+        $(answer).removeClass(ANSWER_WRONG_CLASS_NAME);
+        $(stats).removeClass(ANSWER_WRONG_CLASS_NAME);
+    }
+
+}
+
+function fadeAllAnswerDivsToOpacityZero() {
+    fadeAnswerDivToOpacityZero(1, 1);
+    fadeAnswerDivToOpacityZero(2, 1);
+    fadeAnswerDivToOpacityZero(3, 1);
+    fadeAnswerDivToOpacityZero(4, 1);
+}
+
+
+function showAllAnswers() {
+    $("#all-questions-div").show();
+
+    $(ANSWER_DIV_ONE).fadeTo(1, 1);
+    $(ANSWER_DIV_TWO).fadeTo(1, 1);
+    $(ANSWER_DIV_THREE).fadeTo(1, 1);
+    $(ANSWER_DIV_FOUR).fadeTo(1, 1);
+    $("#timer-text").fadeTo(1, 1);
+}
+
+function resetAllAnswersForNewQuestion() {
+    hideAllAnswers();
+
+    removeWrongAnswerClassToQuestion(1);
+    removeWrongAnswerClassToQuestion(2);
+    removeWrongAnswerClassToQuestion(3);
+    removeWrongAnswerClassToQuestion(4);
+
+    $(ANSWER_STAT_PREFIX+getWordForNumber(1)).text("");
+    $(ANSWER_STAT_PREFIX+getWordForNumber(2)).text("");
+    $(ANSWER_STAT_PREFIX+getWordForNumber(3)).text("");
+    $(ANSWER_STAT_PREFIX+getWordForNumber(4)).text("");
+
+}
+
+function hideAllAnswers() {
+    $("#all-questions-div").hide();
+}
+
+
+function fadeAnswerDivToOpacityZero(answerNumber, timeToFade) {
     $(getAnswerDivIdForNumber(answerNumber)).fadeTo(timeToFade, 0); // hide it
 }
 
@@ -282,39 +353,32 @@ function onTimeElapsedForQuestion(currentQuestion, isMoreQuestions, howManyQuest
 
 function onAnswerToQuestionReturned(answer, currentQuestion, isMoreQuestions, howManyAnswersInPlay) {
 
-    // hide the other divs
+    // mark the other divs as wrong
     var i;
     for ( i = 1; i <= 4; i++) {
         if ( !(i === answer)) {
-            fadeAnswerDiv(i, 1000);
+            // fadeAnswerDivToOpacityZero(i, 1000);
+            addWrongAnswerClassToQuestion(i);
         }
     }
 
     var showAnswerInterval = setInterval(function() {
         clearInterval(showAnswerInterval); // stop it
-        fadeAnswerDiv(answer, 1);
-        hideAllAnswers();
-        showChartData(currentQuestion, isMoreQuestions, howManyAnswersInPlay);
+        // fadeAnswerDivToOpacityZero(answer, 1);
+        // hideAllAnswers();
+        getStatsForQuestion(currentQuestion, isMoreQuestions, howManyAnswersInPlay);
 
     }, CORRECT_ANSWER_SHOWN_TIME_MS); // show it for a 2 seconds
 }
 
-function showChartData(currentQuestion, isMoreQuestions, totalAnswersInPlay) {
+function getStatsForQuestion(currentQuestion, isMoreQuestions, totalAnswersInPlay) {
     $.ajax({
         type: "GET",
         headers: { "Quiz-Key" : quizMasterKey },
         url: "stats?number="+currentQuestion,
         success: function(data) {
-
-            showChartStatisticsForQuestion(data, totalAnswersInPlay);
-
-            setTimeout(function () {
-                if ( isMoreQuestions) {
-                    getQuestion(currentQuestion + 1); // go to the next question
-                } else {
-                    onGameOver();
-                }
-            }, 6000); // Leave the chart on screen for about 6 seconds
+            showStats(data, currentQuestion, isMoreQuestions);
+            // showChartStatisticsForQuestion(data, totalAnswersInPlay);
         },
         error: function(error) {
             if ( quizMasterKey ) {
@@ -322,6 +386,29 @@ function showChartData(currentQuestion, isMoreQuestions, totalAnswersInPlay) {
             }
         }
     });
+}
+
+function showStats(stats, currentQuestion, isMoreQuestions) {
+
+    if ( stats ) {
+        var percentOne = stats.answerOnePercent ? stats.answerOnePercent : 0;
+        var percentTwo = stats.answerTwoPercent ? stats.answerTwoPercent : 0;
+        var percentThree = stats.answerThreePercent ? stats.answerThreePercent : 0;
+        var percentFour = stats.answerFourPercent ? stats.answerFourPercent : 0;
+
+        $(ANSWER_STAT_PREFIX+getWordForNumber(1)).text(percentOne+"%");
+        $(ANSWER_STAT_PREFIX+getWordForNumber(2)).text(percentTwo+"%");
+        $(ANSWER_STAT_PREFIX+getWordForNumber(3)).text(percentThree+"%");
+        $(ANSWER_STAT_PREFIX+getWordForNumber(4)).text(percentFour+"%");
+    }
+
+    setTimeout(function () {
+        if ( isMoreQuestions) {
+            getQuestion(currentQuestion + 1); // go to the next question
+        } else {
+            onGameOver();
+        }
+    }, SHOW_STATS_TIME_MS); // Leave the chart on screen for a certain amount of time
 }
 
 function pauseQuiz() {
@@ -380,10 +467,10 @@ function onGameOver() {
     console.log("GAME OVER");
 
     $("#question-text").html("Quiz Over!<br>Now calculating the results...");
-    fadeAllAnswers();
+    fadeAllAnswerDivsToOpacityZero();
     $("#help-text-div").hide();
     $("#answers-and-chart-div").hide();
-    hideChart();
+    // hideChart();
     // Give the illusion of anticipation
     setTimeout(fetchScoresOnGameOver, SHOW_GAME_OVER_TIME_MS);
 }
@@ -418,7 +505,7 @@ function onScoresReturned(scores) {
     var scoresTextId = "#scores-div";
     $("#question-text").text("Here's how the leader board looks");
     $("#scores-div").show();
-
+    var noAnswersHtml = '<h2>No answers were given!</h2>';
     if ( scores && scores.length > 0 ) {
         console.log("Scores returned: "+scores);
         var scoresAsKey = { };
@@ -435,7 +522,7 @@ function onScoresReturned(scores) {
         }
 
         if ( scoresAsKey.length == 0) {
-            $(scoresTextId).html("No answers where given!");
+            $(scoresTextId).html(noAnswersHtml);
         } else {
             var keys = Object.keys(scoresAsKey);
             var i;
@@ -448,7 +535,7 @@ function onScoresReturned(scores) {
             $(scoresTextId).html(scoresHtml);
         }
     } else {
-        $(scoresTextId).html("No answers where given!");
+        $(scoresTextId).html(noAnswersHtml);
     }
 }
 

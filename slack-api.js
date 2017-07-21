@@ -45,7 +45,7 @@ exports.slackInteractive = function (request, response) {
     if ( textEntered === 'play') {
         console.log("Player ["+name+"] with userId ["+userId+"] has opted to join the quiz");
         addSlackUserInfo(name, true, userId, slashCommandChannelId);
-        return response.status(200).json( { text: "Hurrah! You've registered to be part of the amazing quiz extravaganza!"} );
+        return response.status(200).json( { text: "Hurrah! You've registered to be part of the amazing Prosper quiz extravaganza!"} );
     } else if ( textEntered === 'stop') {
         console.log("Player ["+name+"] has opted to stop playing in the the quiz");
         removeSlackUserFromQuiz(name);
@@ -114,20 +114,21 @@ exports.sendNewQuestionToSlackUsers = function (questionInformation) {
                 continue; // don't annoy this person
             }
 
-            // Slack won't allow lots of responses in 30 minutes using response_urls :-(
-            request.post({
-                url:'https://slack.com/api/chat.postMessage',
-                form: {
-                    token: APPLICATION_SLACK_OAUTH_TOKEN,
-                    channel: personalChannelId,
-                    text: slackQuestion,
-                    attachments: JSON.stringify(slackAttachments)
-                }},
-                function( error, httpResponse, body) {
-                    if (error) {
-                        console.log("There was an error sending the data to slack for the new question: "+JSON.stringify(error));
-                    }
-                });
+            sendMessageToSlack(slackUserInfo[slackName].slackPersonalChannelName, slackQuestion, slackAttachments)
+
+            // request.post({
+            //     url:'https://slack.com/api/chat.postMessage',
+            //     form: {
+            //         token: APPLICATION_SLACK_OAUTH_TOKEN,
+            //         channel: personalChannelId,
+            //         text: slackQuestion,
+            //         attachments: JSON.stringify(slackAttachments)
+            //     }},
+            //     function( error, httpResponse, body) {
+            //         if (error) {
+            //             console.log("There was an error sending the data to slack for the new question: "+JSON.stringify(error));
+            //         }
+            //     });
         }
     }
 
@@ -183,6 +184,7 @@ function addSlackUserInfo(name, wantsToPlayInteractively, userId, slashCommandCh
     playerInfo.wantsToPlayInteractively = wantsToPlayInteractively;
     playerInfo.userId = userId;
     playerInfo.slashCommandChannelId = slashCommandChannelId;
+    playerInfo.slackPersonalChannelName = "@"+name;
     slackUserInfo[name] = playerInfo;
 
     setProfileInfoForUser(playerInfo);
@@ -196,6 +198,17 @@ function removeSlackUserFromQuiz(name) {
         userInfo.wantsToPlayInteractively = false;
     }
 }
+
+function unregisterAllSlackUsersFromQuiz() {
+    console.log("Un registering all slack user information");
+    for ( var slackName in slackUserInfo ) {
+        if (slackUserInfo.hasOwnProperty(slackName)) {
+            var userInfo = slackUserInfo[slackName];
+            userInfo.wantsToPlayInteractively = false;
+        }
+    }
+}
+
 
 function setPersonalChannelIdForUser(playerInfo) {
     console.log("Getting personal IM channel for player user id ["+playerInfo.userId+"]");
@@ -215,9 +228,12 @@ function setPersonalChannelIdForUser(playerInfo) {
                     var parsedBody = JSON.parse(body);
                     if ( parsedBody && parsedBody.channel && parsedBody.channel.id) {
                         playerInfo.personalChannelId = parsedBody.channel.id;
-                        if ( playerInfo.personalChannelId && playerInfo.wantsToPlayInteractively ) {
-                            var message = "Oh hi "+playerInfo.firstName+"! I'll post the quiz questions for you, here in this channel.";
-                            sendSimpleSlackMessageToChannel(playerInfo.personalChannelId, message);
+                        // var personalChannelSameAsSlashChannel = playerInfo.slashCommandChannelId && playerInfo.slashCommandChannelId === playerInfo.personalChannelId;
+                        // if ( !personalChannelSameAsSlashChannel && playerInfo.personalChannelId && playerInfo.wantsToPlayInteractively ) {
+                            // Only send a message to the person if the slash command channel is different to the personal channel
+                        if ( playerInfo.slackPersonalChannelName ) {
+                            var message = "Oh hai "+playerInfo.firstName+"! I'll post the quiz questions for you, here in this channel.";
+                            sendSimpleSlackMessageToChannel(playerInfo.slackPersonalChannelName, message);
                         }
                     }
                 }
@@ -306,8 +322,9 @@ exports.quizHasStarted = function () {
 
 exports.quizHasStopped = function() {
     console.log("The quiz is over - so sending a goodbye to everyone that participated");
-    var message = "The quiz is now over - thanks for playing, I hope you had fun!";
+    var message = "The quiz is now over! Thanks for playing - I hope you had fun! (I've also un-registered you, so I won't annoy you anymore)";
     sendSimpleSlackMessageToAllUsers(message, true);
+    unregisterAllSlackUsersFromQuiz();
 };
 
 function sendSimpleSlackMessageToAllUsers(message, shouldRemoveUsersAfterSending) {
@@ -324,7 +341,7 @@ function sendSimpleSlackMessageToAllUsers(message, shouldRemoveUsersAfterSending
                 continue; // they do not want to be bothered, so skip this person
             }
 
-            sendSimpleSlackMessageToChannel(personalChannelId, message);
+            sendSimpleSlackMessageToChannel(slackUserInfo[slackName].slackPersonalChannelName, message);
 
             if ( shouldRemoveUsersAfterSending ) {
                 // This is the last message we should send to this person
@@ -335,20 +352,51 @@ function sendSimpleSlackMessageToAllUsers(message, shouldRemoveUsersAfterSending
     }
 }
 
+
+
 function sendSimpleSlackMessageToChannel(channelId, message) {
+
+    sendMessageToSlack(channelId, message, null);
+
+    // request.post({
+    //         url:'https://slack.com/api/chat.postMessage',
+    //         form: {
+    //             token: APPLICATION_SLACK_OAUTH_TOKEN,
+    //             channel: channelId,
+    //             text: message
+    //         }},
+    //     function( error, httpResponse, body) {
+    //         if (error) {
+    //             console.log("There was an error sending a chat.postMessage to slack: "+JSON.stringify(error));
+    //         }
+    //     });
+}
+
+function sendMessageToSlack(channelId, message, attachments) {
+
+    var postForm = {
+        token: APPLICATION_SLACK_OAUTH_TOKEN,
+        channel: channelId,
+        text: message,
+        as_user: false
+    };
+
+    if ( attachments ) {
+        postForm.attachments = JSON.stringify(attachments);
+    }
+
     request.post({
             url:'https://slack.com/api/chat.postMessage',
-            form: {
-                token: APPLICATION_SLACK_OAUTH_TOKEN,
-                channel: channelId,
-                text: message
-            }},
+            form: postForm
+        },
         function( error, httpResponse, body) {
             if (error) {
-                console.log("There was an error sending a chat.postMessage to slack: "+JSON.stringify(error));
+                console.log("There was an error sending the message ["+message+"] to channel id ["+channelId+"] postMessage "+JSON.stringify(error));
             }
-        });
+        }
+    );
 }
+
 
 function isNumber(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
