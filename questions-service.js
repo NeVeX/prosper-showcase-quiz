@@ -1,40 +1,7 @@
 var fs = require('fs');
 
-module.exports = {
-    changeAnswersLeftDown: function () {
-        return doChangeAnswersLeftDown();
-    },
-    setCurrentQuestion: function(questionNumber) {
-        return doSetCurrentQuestion(questionNumber);
-    },
-    getQuestionForNumber : function(questionNumber) {
-        return doGetQuestionForNumber(questionNumber);
-    },
-    stopQuiz : function() {
-        return doStopQuiz();
-    },
-    pauseQuiz: function() {
-        return doPauseQuiz();
-    },
-    getStatisticsForQuestion: function (questionNumber) {
-        return doGetStatisticsForQuestion(questionNumber);
-    },
-    recordPlayerAnswer: function(name, answer) {
-        return doRecordPlayerAnswer(name, answer);
-    },
-    getCurrentScores: function() {
-        return doGetCurrentScores();
-    },
-    getAnswerForQuestion: function(questionNumber) {
-        return doGetAnswerForQuestion(questionNumber);
-    },
-    generateTestData: function () {
-        return doGenerateTestData();
-    }
-};
-
 // Read the latest file
-var questionsJson = fs.readFileSync('config/questions.2017-07-07.json');
+var questionsJson = fs.readFileSync('config/questions.2017-07-21.json');
 
 if ( !questionsJson ) {
     throw Error("Did not load questions from json file");
@@ -49,28 +16,34 @@ var answerStatistics = {};
 var currentQuestionInUse = null; // Not in play at the start
 var currentAnswersInUse = null;
 
-function doStartNewGame() {
+var isQuizPaused = false;
+var isQuizStopped = true;
+
+exports.startQuiz = function() {
     allPlayerScores = {};
     answerStatistics = {};
     console.log("Started a new game");
+    isQuizPaused = true;
+    isQuizStopped = false;
     return true;
-}
+};
 
-function doSetCurrentQuestion(questionNumber) {
+exports.setCurrentQuestion = function(questionNumber) {
+    if ( questionNumber === currentAnswersInUse) {
+        console.log("No setting question to ["+questionNumber+"] since that is the current question in play");
+        return false;
+    }
     var question = getQuestion(questionNumber);
     if ( question ) {
-        if ( questionNumber == 1 ) {
-            doStartNewGame();
-        }
         currentQuestionInUse = questionNumber;
         currentAnswersInUse = getTotalAnswersForQuestion(question);
         console.log("Changed the question in use to ["+currentQuestionInUse+"] - answers is use ["+currentAnswersInUse+"]");
         return true;
     }
     return false;
-}
+};
 
-function doGetStatisticsForQuestion(questionNumber) {
+exports.getStatisticsForQuestion = function(questionNumber) {
     if ( ! getQuestion(questionNumber) ) {
         return { error: "Question number ["+questionNumber+"] is invalid"};
     }
@@ -78,18 +51,40 @@ function doGetStatisticsForQuestion(questionNumber) {
     if ( !statsQuestion ) {
         return { error: "There are no stats at this time"};
     }
-    return {
-        answerOne: ( statsQuestion[1] ? statsQuestion[1] : 0),
-        answerTwo: (statsQuestion[2] ? statsQuestion[2] : 0),
-        answerThree: (statsQuestion[3] ? statsQuestion[3] : 0),
-        answerFour: (statsQuestion[4] ? statsQuestion[4] : 0)
-    }
-}
 
-function doGenerateTestData() {
-    if ( ! allPlayerScores ) {
-        doSetCurrentQuestion(1);
+    var totalAnswers = statsQuestion.totalAnswers ? statsQuestion.totalAnswers : 0;
+    var answerOneCount = statsQuestion[1] ? statsQuestion[1] : 0;
+    var answerTwoCount = statsQuestion[2] ? statsQuestion[2] : 0;
+    var answerThreeCount = statsQuestion[3] ? statsQuestion[3] : 0;
+    var answerFourCount = statsQuestion[4] ? statsQuestion[4] : 0;
+
+    // Calculate percentages
+    var answerOnePercent = 0, answerTwoPercent = 0, answerThreePercent = 0, answerFourPercent = 0;
+    if ( totalAnswers > 0 ) {
+        answerOnePercent = Math.round((answerOneCount / totalAnswers) * 100);
+        answerTwoPercent = Math.round((answerTwoCount / totalAnswers) * 100);
+        answerThreePercent = Math.round((answerThreeCount / totalAnswers) * 100);
+        answerFourPercent = Math.round((answerFourCount / totalAnswers) * 100);
     }
+
+    return {
+        "answerOneCount": answerOneCount,
+        "answerTwoCount" : answerTwoCount,
+        "answerThreeCount": answerThreeCount,
+        "answerFourCount": answerFourCount,
+
+        "answerOnePercent" : answerOnePercent,
+        "answerTwoPercent" : answerTwoPercent,
+        "answerThreePercent" : answerThreePercent,
+        "answerFourPercent" : answerFourPercent,
+
+        "totalAnswers": totalAnswers
+    }
+
+};
+
+exports.generateTestData = function() {
+
     var totalQuestions = questions.length;
     var i;
     for (i = 1; i < 100; i++) {
@@ -98,24 +93,24 @@ function doGenerateTestData() {
         for ( q = 1; q <= totalQuestions; q++) {
             var answer = 1; // will be wrong for some questions
             if ( Math.floor(Math.random() * 2) === 1) {
-                answer = doGetAnswerForQuestion(q).answer; // actually get the answer
+                answer = this.getAnswerForQuestion(q).answer; // actually get the answer
             }
             // record a score
-            doRecordPlayerAnswerWithGameState(name, answer, q, 4);
+            recordPlayerAnswerWithGameState(name, answer, q, 4);
         }
     }
     console.log("Generated test data for ["+allPlayerScores.length+"] players");
     return true;
-}
+};
 
-function doGetAnswerForQuestion(questionNumber) {
+exports.getAnswerForQuestion = function(questionNumber) {
     var question = getQuestion(questionNumber);
     if ( question ) {
         return { answer: question.correctAnswer}
     }
-}
+};
 
-function doChangeAnswersLeftDown() {
+exports.changeAnswersLeftDown = function() {
     var answersInUse = currentAnswersInUse;
     if ( answersInUse ) {
         var newScoreAmount = getScoreAmountForAnswersLeft(answersInUse);
@@ -130,13 +125,23 @@ function doChangeAnswersLeftDown() {
         return newScoreAmount;
     }
     return null;
-}
+};
 
-function doPauseQuiz() {
-    console.log("Paused game at question ["+currentQuestionInUse+"]");
-    currentQuestionInUse = null;
+exports.pauseQuiz = function() {
+    console.log("Paused the game at question ["+currentQuestionInUse+"]");
+    isQuizPaused = true;
     return true;
-}
+};
+
+exports.unPauseQuiz = function() {
+    if ( currentQuestionInUse && currentAnswersInUse) {
+        console.log("Un-Paused the game at question ["+currentQuestionInUse+"]");
+        isQuizPaused = false;
+        return true; // it's unpaused
+    }
+    console.log("Cannot Un-Paused the game since question in play is not set");
+    return false; // the data isn't correct, so do not un pause
+};
 
 function getScoreAmountForAnswersLeft(currentAnswersInUse) {
     if ( currentAnswersInUse && currentAnswersInUse > 0 ) {
@@ -161,11 +166,11 @@ function getTotalAnswersForQuestion(question) {
     return 1; // only one answer? (shouldn't happen)
 }
 
-function doStopQuiz() {
-    // Pause the game for now - later we may want to add stop game logic (extra to pause game logic)
-    doPauseQuiz();
-    return true;
-}
+exports.stopQuiz = function() {
+    this.pauseQuiz();
+    isQuizStopped = true;
+    return isQuizStopped;
+};
 
 function getQuestion(number) {
     var questionKey = number - 1;
@@ -175,7 +180,7 @@ function getQuestion(number) {
     return null;
 }
 
-function doGetQuestionForNumber(questionNumber) {
+exports.getQuestionForNumber = function(questionNumber) {
     var foundQuestion = getQuestion(questionNumber);
     if ( foundQuestion ) {
         // Don't return the direct question object, create the response we want to send to the client
@@ -190,16 +195,20 @@ function doGetQuestionForNumber(questionNumber) {
         };
     }
     return null;
-}
+};
 
-function doRecordPlayerAnswer(name, answer) {
-    return doRecordPlayerAnswerWithGameState(name, answer, currentQuestionInUse, currentAnswersInUse);
-}
+exports.recordPlayerAnswer = function(name, answer) {
+    return recordPlayerAnswerWithGameState(name, answer, currentQuestionInUse, currentAnswersInUse);
+};
 
-function doRecordPlayerAnswerWithGameState(name, answerGiven, questionInPlay, answersInUse) {
-    if ( !questionInPlay ) {
-        return { error: "The quiz is either temporarily paused (between rounds) or it's already over" }
+function recordPlayerAnswerWithGameState(name, answerGiven, questionInPlay, answersInUse) {
+    if ( isQuizStopped) {
+        return { error: "The quiz is over - no more answers can be accepted" }
     }
+    if ( isQuizPaused ) {
+        return { error: "Question "+questionInPlay+" is currently not accepting answers, since the round is either waiting to start, or has finished already" }
+    }
+
     var scoreAmount = getScoreAmountForAnswersLeft(answersInUse);
     // console.log("Recording player "+name+" answer "+answer+" for question in play "+questionInPlay);
     var currentQuestion = getQuestion(questionInPlay);
@@ -216,7 +225,7 @@ function doRecordPlayerAnswerWithGameState(name, answerGiven, questionInPlay, an
     // We only allow one answer per question now
     if ( (questionInPlay in allPlayerScores[name]) ) {
         // console.log("Not allowing player to answer again since they already answered");
-        return { error: "Looks like you already answered this question - I can't let you answer it again"};
+        return { error: "Looks like you already answered question "+questionInPlay+" - I can't let you answer it again"};
     }
 
     if ( correctAnswer == answerGiven) {
@@ -225,7 +234,9 @@ function doRecordPlayerAnswerWithGameState(name, answerGiven, questionInPlay, an
         allPlayerScores[name][questionInPlay] = 0; // Give them nothing
     }
 
-    updateStatistics(questionInPlay, answerGiven);
+    if ( answerGiven > 0 && answerGiven <= getTotalAnswersForQuestion(currentQuestion) ) {
+        updateStatistics(questionInPlay, answerGiven);
+    }
 
     return { currentQuestion: questionInPlay};
 }
@@ -234,17 +245,18 @@ function updateStatistics(currentQuestion, answerGiven) {
     // See if we have already set statistics on this
     if ( !answerStatistics[currentQuestion]) {
         answerStatistics[currentQuestion] = {
-            // correctAnswer: question.correctAnswer
+            totalAnswers: 0
         }
     }
 
     if ( ! answerStatistics[currentQuestion][answerGiven] ) {
-        answerStatistics[currentQuestion][answerGiven] = 0; // set to zero
+        answerStatistics[currentQuestion][answerGiven] = 0;
     }
     answerStatistics[currentQuestion][answerGiven]++; // now just increment it
+    answerStatistics[currentQuestion].totalAnswers++; // increment the total answers given too
 }
 
-function doGetCurrentScores() {
+exports.getCurrentScores = function() {
     var returnScores = [];
     for ( var playerName in allPlayerScores ) {
         var totalPlayerScore = 0;
@@ -258,5 +270,4 @@ function doGetCurrentScores() {
         returnScores.push({"name": playerName, "score": totalPlayerScore});
     }
     return returnScores;
-}
-
+};

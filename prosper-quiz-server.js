@@ -29,11 +29,15 @@ app.post('/prosperquiz/slack/interactive', slackApi.slackInteractiveAnswer);
 app.post('/prosperquiz/test/data', testApi.generateTestData);
 app.get('/prosperquiz/questions', quizMaster.getQuestionForNumber);
 app.get('/prosperquiz/answers', questionsApi.getAnswerForQuestion);
-app.get('/prosperquiz/scores', questionsApi.getCurrentScores);
+app.get('/prosperquiz/scores', quizMaster.getCurrentScores);
 app.get('/prosperquiz/stats', questionsApi.getStatisticsForQuestion);
 app.patch('/prosperquiz/scores', questionsApi.reduceScoreBonus);
+app.post('/prosperquiz/slack/sendquestion', quizMaster.sendQuestionToSlack);
+
+app.post('/prosperquiz/start', quizMaster.startQuiz);
 app.post('/prosperquiz/stop', quizMaster.stopQuiz);
 app.post('/prosperquiz/pause', questionsApi.pauseQuiz);
+app.post('/prosperquiz/unpause', questionsApi.unPauseQuiz);
 
 app.get('/prosperquiz', function(request, response) {
     response.setHeader('Content-Type', 'text/html');

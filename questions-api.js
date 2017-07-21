@@ -35,8 +35,8 @@ exports.getAnswerForQuestion = function (request, response) {
     }
 };
 
-exports.getCurrentScores = function (request, response) {
-    return response.status(200).json(questionsService.getCurrentScores());
+exports.getCurrentScores = function () {
+    return questionsService.getCurrentScores();
 };
 
 exports.reduceScoreBonus = function (request, response) {
@@ -49,9 +49,16 @@ exports.reduceScoreBonus = function (request, response) {
     }
 };
 
+exports.startQuiz = function (request) {
+    if ( request.nevex.isQuizMaster ) {
+        return questionsService.startQuiz();
+    }
+    return false; // not authorized
+};
+
 exports.stopQuiz = function (request) {
     if ( request.nevex.isQuizMaster ) {
-        return questionsService.stopQuiz();
+        return { isStopped: questionsService.stopQuiz() }
     } else {
         return { error: "You are not authorized to stop the quiz"};
     }
@@ -63,6 +70,15 @@ exports.pauseQuiz = function (request, response) {
         return response.status(200).json({"isPaused": isPaused});
     } else {
         return response.status(403).json({"error": "You are not authorized to pause the quiz"});
+    }
+};
+
+exports.unPauseQuiz = function (request, response) {
+    if ( request.nevex.isQuizMaster ) {
+        var isPaused = questionsService.unPauseQuiz();
+        return response.status(200).json({"isUnPaused": isPaused});
+    } else {
+        return response.status(403).json({"error": "You are not authorized to un-pause the quiz"});
     }
 };
 

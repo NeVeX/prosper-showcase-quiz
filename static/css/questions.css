@@ -1,16 +1,26 @@
+html {
+    height: 100%;
+    padding: 80px;
+}
+
+/*body {*/
+    /*height: 100%;*/
+/*}*/
+
 .align-center, .scores-div, .answers-and-chart-div, .chart-div, .all-questions-div {
     display: flex;
     align-items: center;
     min-height: 24em;
     justify-content: center;
     flex-direction: column;
-    margin-right: 100px;
-    margin-left: 100px;
+    /*margin-right: 100px;*/
+    /*margin-left: 100px;*/
 }
 
 .answers-div, .answer-div-one, .answer-div-two, .answer-div-three, .answer-div-four, .winning-answer, .answers-and-chart-div {
     display: flex;
     flex-direction: row;
+    width: 100%;
 }
 
 .all-questions-div {
@@ -19,18 +29,22 @@
 }
 
 .chart-div {
+    display: inline-flex;
+    height: 50%;
+    width: 50%;
     /*position: absolute;*/
-    margin-right: 0px;
+    margin-right: 0;
     margin-left: 20px;
 }
 
 .scores-div {
-    margin-right: 100px;
-    margin-left: 100px;
+    /*margin-right: 100px;*/
+    /*margin-left: 100px;*/
 }
 .question-text {
     text-align: center;
 }
+
 .scores-text {
     text-align: center;
 }
@@ -39,7 +53,7 @@
 }
 
 .answers-and-chart-div {
-    margin-top: 50px;
+    margin-top: 20px;
 }
 
 .timer-div {
@@ -54,6 +68,24 @@
 
 .dynamic-answer {
     text-align: left;
+    width: 90%;
+}
+
+.answer-wrong {
+    opacity: 0.6;
+    /*text-decoration: line-through;*/
+    color: firebrick;
+    -moz-transition: all 1.4s ease-in;
+    -o-transition: all 1.4s ease-in;
+    -webkit-transition: all 1.4s ease-in;
+    transition: all 1.4s ease-in;
+}
+
+.percent-stat {
+    margin-left: 50px;
+    font-weight: bold;
+    text-align: right;
+    align-content: flex-end;
 }
 
 .score-amount-number {
@@ -67,6 +99,10 @@
 }
 .help-text {
     text-align: center;
+}
+
+.help-text-div {
+    margin-top: 10px;
 }
 
 .help-text-highlight {

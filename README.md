@@ -5,6 +5,13 @@ To play, this node app is shown on screen and simultaneously will accept slack c
 
 ##### Release Notes
 
+#### `1.3.0`
+
+* Added more oauth grants to application - can now try to get profile information and personal channel id's when users `/quiz play`
+* All interactive slack messages are sent to the personal user channel - fixing the public channel issue 
+* Scores are updated with full names now (where users use the `/quiz play` command)
+* Changed some UI flows - all text disappears and then the chart shows after each question
+
 #### `1.2.0`
 
 * This version was used for the quiz in the Showcase on July 7th 2017
@@ -27,7 +34,6 @@ To play, this node app is shown on screen and simultaneously will accept slack c
     * Answering with 3 questions shown, gets you 3 points
     * Answering with 2 or fewer questions shown, gets you 1 point    
 * Created new `quiz-master` control flow in node server 
-    
 * New design was helped from templates at [HTML5 UP](https://html5up.net/)
 
 #### `1.0.0`

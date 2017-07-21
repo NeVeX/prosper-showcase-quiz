@@ -5,9 +5,9 @@
         <script src="js/jquery-3.1.1.js"></script>
         <script src="js/question-control.js"></script>
         <script src="js/chart-2.6.0.js"></script>
-        <script src="js/chart-control.js"></script>
-        <link rel="stylesheet" href="css/questions.css">
+        <!--<script src="js/chart-control.js"></script>-->
         <link rel="stylesheet" href="css/ext-question.css">
+        <link rel="stylesheet" href="css/questions.css">
     </head>
 
 	<body class="align-center">
@@ -20,28 +20,34 @@
                 <div class="all-questions-div" id="all-questions-div">
 
                     <div class="answer-div-one" id="answer-div-one">
-                        <h2 class="prefix-static-answer">1.</h2>
+                        <h2 class="prefix-static-answer" id="answer-prefix-one">1.</h2>
                         <h2 class="dynamic-answer" id="answer-text-one">Answer One</h2>
+                        <h2 class="percent-stat" id="answer-percent-stat-one">16%</h2>
                     </div>
 
                     <div class="answer-div-two" id="answer-div-two">
-                        <h2 class="prefix-static-answer">2.</h2>
+                        <h2 class="prefix-static-answer" id="answer-prefix-two">2.</h2>
                         <h2 class="dynamic-answer" id="answer-text-two">Answer Two</h2>
+                        <h2 class="percent-stat" id="answer-percent-stat-two">0%</h2>
                     </div>
 
                     <div class="answer-div-three" id="answer-div-three">
-                        <h2 class="prefix-static-answer">3.</h2>
+                        <h2 class="prefix-static-answer" id="answer-prefix-three">3.</h2>
                         <h2 class="dynamic-answer" id="answer-text-three">Answer Three</h2>
+                        <h2 class="percent-stat" id="answer-percent-stat-three">50%</h2>
                     </div>
 
                     <div class="winning-answer" id="answer-div-four">
-                        <h2 class="prefix-static-answer">4.</h2>
+                        <h2 class="prefix-static-answer" id="answer-prefix-four">4.</h2>
                         <h2 class="dynamic-answer" id="answer-text-four">Answer Four</h2>
+                        <h2 class="percent-stat" id="answer-percent-stat-four">34%</h2>
                     </div>
                 </div>
-                <div id="chart-div" class="chart-div" >
-                    <canvas id="canvas"></canvas>
-                </div>
+
+                <!--<div id="chart-div" class="chart-div" >-->
+                    <!--<canvas id="canvas"></canvas>-->
+                <!--</div>-->
+
             </div>
 
 
@@ -56,10 +62,10 @@
         </div>
 
         <footer>
-            <div id="help-text-div" style="margin-top: 10px">
-                <h5 class="help-text">
-                    To play, use either <b class="help-text-highlight">/quiz play</b> or answer using <b class="help-text-highlight">/quiz [1,2,3,4]</b> in any Slack channel
-                </h5>
+            <div id="help-text-div" class="help-text-div">
+                <h4 class="help-text">
+                    To play, enter <b class="help-text-highlight">/quiz play</b> in any Slack channel
+                </h4>
             </div>
         </footer>
     </body>
