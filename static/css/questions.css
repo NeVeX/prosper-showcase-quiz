@@ -1,6 +1,6 @@
 html {
     height: 100%;
-    padding: 120px;
+    padding: 80px;
 }
 
 /*body {*/
@@ -53,7 +53,7 @@ html {
 }
 
 .answers-and-chart-div {
-    margin-top: 50px;
+    margin-top: 20px;
 }
 
 .timer-div {

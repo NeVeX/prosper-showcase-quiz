@@ -231,8 +231,9 @@ function setPersonalChannelIdForUser(playerInfo) {
                         // var personalChannelSameAsSlashChannel = playerInfo.slashCommandChannelId && playerInfo.slashCommandChannelId === playerInfo.personalChannelId;
                         // if ( !personalChannelSameAsSlashChannel && playerInfo.personalChannelId && playerInfo.wantsToPlayInteractively ) {
                             // Only send a message to the person if the slash command channel is different to the personal channel
-                        if ( playerInfo.slackPersonalChannelName ) {
-                            var message = "Oh hai "+playerInfo.firstName+"! I'll post the quiz questions for you, here in this channel.";
+                        if ( playerInfo.slackPersonalChannelName && playerInfo.wantsToPlayInteractively ) {
+                            var name = playerInfo.firstName ? playerInfo.firstName : playerInfo.slackPersonalChannelName;
+                            var message = "Oh hai "+name+"! I'll post the quiz questions for you, here in this channel.";
                             sendSimpleSlackMessageToChannel(playerInfo.slackPersonalChannelName, message);
                         }
                     }
@@ -241,7 +242,6 @@ function setPersonalChannelIdForUser(playerInfo) {
         }
     );
 }
-
 
 function setProfileInfoForUser(playerInfo) {
     console.log("Getting profile info for player user id ["+playerInfo.userId+"]");
@@ -259,16 +259,15 @@ function setProfileInfoForUser(playerInfo) {
         } else {
             if ( body ) {
                 var parsedBody = JSON.parse(body);
-                if ( !parsedBody ) { return }
-
-                var firstName = parsedBody.profile.first_name;
-                var lastName = parsedBody.profile.last_name;
-                if ( firstName && lastName ) {
-                    playerInfo.firstName = firstName;
-                    playerInfo.lastName = lastName;
-
-                    setPersonalChannelIdForUser(playerInfo);
+                if ( parsedBody && parsedBody.profile ) {
+                    var firstName = parsedBody.profile.first_name;
+                    var lastName = parsedBody.profile.last_name;
+                    if (firstName && lastName) {
+                        playerInfo.firstName = firstName;
+                        playerInfo.lastName = lastName;
+                    }
                 }
+                setPersonalChannelIdForUser(playerInfo);
             }
         }
     });
