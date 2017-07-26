@@ -35,6 +35,20 @@ exports.getAnswerForQuestion = function (request, response) {
     }
 };
 
+exports.setQuestions = function (request, response) {
+
+    if ( request.nevex.isQuizMaster  ) {
+       var result = questionsService.loadQuestionsFromJson(JSON.stringify(request.body));
+       if ( !result || result.isError ) {
+           return response.status(422).json(result);
+       } else {
+           return response.status(201).json({"message": "Successfully updated the questions"})
+       }
+    } else {
+        return response.status(403).json({"error": "You are not allowed to set the questions"});
+    }
+};
+
 exports.getCurrentScores = function () {
     return questionsService.getCurrentScores();
 };

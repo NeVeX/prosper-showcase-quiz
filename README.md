@@ -5,6 +5,13 @@ To play, this node app is shown on screen and simultaneously will accept slack c
 
 ##### Release Notes
 
+#### `1.4.0`
+
+* Added API to dynamically change the questions for the quiz at any time
+  * Due to time constraints and zero testing, all questions are now locked to 4 answers since less than may cause issues
+* All questions (static or dynamic) are checked for errors now  
+* Changed the question property from `timeAllowed` to `timeAllowedSeconds`
+
 #### `1.3.0`
 
 * Added more oauth grants to application - can now try to get profile information and personal channel id's when users `/quiz play`
