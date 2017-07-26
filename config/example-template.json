@@ -6,7 +6,7 @@
     "answerThree": "Answer three",
     "answerFour": "Answer four",
     "correctAnswer": 3,
-    "timeAllowed": 22
+    "timeAllowedSeconds": 22
   },
   {
     "question": "This is question two?",
@@ -15,6 +15,6 @@
     "answerThree": "Answer three",
     "answerFour": "Answer four",
     "correctAnswer": 1,
-    "timeAllowed": 22
+    "timeAllowedSeconds": 22
   }
 ]

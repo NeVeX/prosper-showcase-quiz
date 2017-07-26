@@ -108,17 +108,17 @@ function showAllTheAnswers(questionNumber, data, howManyQuestionsInPlay, isMoreQ
         unPauseTheQuiz();
         // Reset everything from the previous round
         showAllAnswers();
-        startAllTheTimers(data.timeAllowed, howManyQuestionsInPlay, questionNumber, isMoreQuestions);
+        startAllTheTimers(data.timeAllowedSeconds, howManyQuestionsInPlay, questionNumber, isMoreQuestions);
     });
 
 }
 
-function startAllTheTimers(timeAllowed, howManyQuestionsInPlay, currentQuestion, isMoreQuestions) {
+function startAllTheTimers(timeAllowedSeconds, howManyQuestionsInPlay, currentQuestion, isMoreQuestions) {
 
-    var timeForEachQuestionMs = ((timeAllowed * 0.62) / (howManyQuestionsInPlay-2)) * 1000;
+    var timeForEachQuestionMs = ((timeAllowedSeconds * 0.62) / (howManyQuestionsInPlay-2)) * 1000;
     console.log("Time (ms) allowed for each question: "+timeForEachQuestionMs);
 
-    var timeLeft = timeAllowed;
+    var timeLeft = timeAllowedSeconds;
     $("#timer-text").text(timeLeft);
     var timeLeftInterval = setInterval(function() {
         $("#timer-text").text(timeLeft--);

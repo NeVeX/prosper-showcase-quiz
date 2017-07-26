@@ -1,23 +1,92 @@
 var fs = require('fs');
 
-// Read the latest file
-var questionsJson = fs.readFileSync('config/questions.2017-07-21.json');
-
-if ( !questionsJson ) {
-    throw Error("Did not load questions from json file");
-}
-
-var questions = JSON.parse(questionsJson);
-
-console.log("Loaded a total of ["+questions.length+"] questions");
 
 var allPlayerScores = {};
 var answerStatistics = {};
+var questions = null;
 var currentQuestionInUse = null; // Not in play at the start
 var currentAnswersInUse = null;
 
 var isQuizPaused = false;
 var isQuizStopped = true;
+
+loadQuestionsFromFile('config/questions.2017-07-21.json'); // default questions
+
+function loadQuestionsFromFile(fileName) {
+    var questionsJson = fs.readFileSync(fileName);
+    var loadResult = doLoadQuestionsFromJson(questionsJson);
+    if ( !loadResult || loadResult.isError ) {
+        throw Error("Could not load questions from file "+fileName);
+    }
+}
+
+exports.loadQuestionsFromJson = doLoadQuestionsFromJson;
+
+function validateQuestion(question) {
+    var problems = [];
+    if ( !question.question ) { problems.push("There is no valid question"); }
+    if ( !question.answerOne ) { problems.push("Answer one is not valid"); }
+    if ( !question.answerTwo ) { problems.push("Answer two is not valid"); }
+    if ( !question.correctAnswer || question.correctAnswer < 1 || question.correctAnswer > 4 ) {
+        problems.push("There is no valid correct answer");
+    }
+    if ( !question.timeAllowedSeconds || question.timeAllowedSeconds < 1) {
+        problems.push("The time allowed in seconds is not valid");
+    }
+
+    // Check the optional questions
+    if ( !question.answerThree && question.answerFour) { problems.push("Cannot have answer four when there is no answer three"); }
+
+    if ( !question.answerThree && !question.answerFour && question.correctAnswer > 2) {
+        problems.push("Cannot have correct answer greater than answers given");
+    }
+    if ( question.answerThree && !question.answerFour && question.correctAnswer > 3) {
+        problems.push("Cannot have correct answer greater than answers given");
+    }
+
+    // TODO: Remove the below rules when we can allow less than 4 answers
+    if ( !question.answerThree ) { problems.push("Answer three is not valid (cannot allow less than 4 answers currently)"); }
+    if ( !question.answerFour ) { problems.push("Answer four is not valid (cannot allow less than 4 answers currently)"); }
+
+    return problems;
+
+}
+function doLoadQuestionsFromJson(questionsJson) {
+
+    if ( !questionsJson ) {
+        return { isError: true, message: "Questions JSON is null/empty" };
+    }
+
+    try {
+        var parsedQuestions = JSON.parse(questionsJson);
+        // validate the json
+        if ( parsedQuestions && parsedQuestions.length > 0 ) {
+            // make sure each one is valid
+            var i;
+            var errorsFound = [];
+            for (i = 0; i < parsedQuestions.length; i++) {
+                var q = parsedQuestions[i];
+                var problems = validateQuestion(q);
+                if ( problems.length > 0 ) {
+                    // this is a bad question
+                    errorsFound.push("Invalid data for question ["+(i+1)+"] - "+problems.join("; "));
+                }
+            }
+            if ( errorsFound.length == 0 ) {
+                questions = parsedQuestions;
+                console.log("Successfully loaded a total of ["+questions.length+"] questions");
+                return { isError: false }
+            } else {
+                console.log("Encountered ["+errorsFound.length+"] problems while trying to load questions. ["+errorsFound+"]");
+                return { isError: true, errors: errorsFound}
+            }
+        }
+    } catch (e) {
+        console.error("Could not load questions from json ["+questionsJson+"] \n "+e);
+        return { isError: true, message: "Could not load questions - "+e.message };
+    }
+
+}
 
 exports.startQuiz = function() {
     allPlayerScores = {};
@@ -72,12 +141,10 @@ exports.getStatisticsForQuestion = function(questionNumber) {
         "answerTwoCount" : answerTwoCount,
         "answerThreeCount": answerThreeCount,
         "answerFourCount": answerFourCount,
-
         "answerOnePercent" : answerOnePercent,
         "answerTwoPercent" : answerTwoPercent,
         "answerThreePercent" : answerThreePercent,
         "answerFourPercent" : answerFourPercent,
-
         "totalAnswers": totalAnswers
     }
 
@@ -190,7 +257,7 @@ exports.getQuestionForNumber = function(questionNumber) {
             answerTwo: foundQuestion.answerTwo,
             answerThree: foundQuestion.answerThree,
             answerFour: foundQuestion.answerFour,
-            timeAllowed: foundQuestion.timeAllowed,
+            timeAllowedSeconds: foundQuestion.timeAllowedSeconds,
             totalQuestions: questions.length // Add the total questions in this quiz
         };
     }

@@ -115,20 +115,6 @@ exports.sendNewQuestionToSlackUsers = function (questionInformation) {
             }
 
             sendMessageToSlack(slackUserInfo[slackName].slackPersonalChannelName, slackQuestion, slackAttachments)
-
-            // request.post({
-            //     url:'https://slack.com/api/chat.postMessage',
-            //     form: {
-            //         token: APPLICATION_SLACK_OAUTH_TOKEN,
-            //         channel: personalChannelId,
-            //         text: slackQuestion,
-            //         attachments: JSON.stringify(slackAttachments)
-            //     }},
-            //     function( error, httpResponse, body) {
-            //         if (error) {
-            //             console.log("There was an error sending the data to slack for the new question: "+JSON.stringify(error));
-            //         }
-            //     });
         }
     }
 
@@ -351,24 +337,8 @@ function sendSimpleSlackMessageToAllUsers(message, shouldRemoveUsersAfterSending
     }
 }
 
-
-
 function sendSimpleSlackMessageToChannel(channelId, message) {
-
     sendMessageToSlack(channelId, message, null);
-
-    // request.post({
-    //         url:'https://slack.com/api/chat.postMessage',
-    //         form: {
-    //             token: APPLICATION_SLACK_OAUTH_TOKEN,
-    //             channel: channelId,
-    //             text: message
-    //         }},
-    //     function( error, httpResponse, body) {
-    //         if (error) {
-    //             console.log("There was an error sending a chat.postMessage to slack: "+JSON.stringify(error));
-    //         }
-    //     });
 }
 
 function sendMessageToSlack(channelId, message, attachments) {

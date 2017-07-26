@@ -28,6 +28,7 @@ app.post('/prosperquiz/slack', slackApi.slackInteractive);
 app.post('/prosperquiz/slack/interactive', slackApi.slackInteractiveAnswer);
 app.post('/prosperquiz/test/data', testApi.generateTestData);
 app.get('/prosperquiz/questions', quizMaster.getQuestionForNumber);
+app.post('/prosperquiz/questions', questionsApi.setQuestions);
 app.get('/prosperquiz/answers', questionsApi.getAnswerForQuestion);
 app.get('/prosperquiz/scores', quizMaster.getCurrentScores);
 app.get('/prosperquiz/stats', questionsApi.getStatisticsForQuestion);
