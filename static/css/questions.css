@@ -10,14 +10,14 @@ html {
 .align-center, .scores-div, .answers-and-chart-div, .chart-div, .all-questions-div {
     display: flex;
     align-items: center;
-    min-height: 24em;
+    /*min-height: 24em;*/
     justify-content: center;
     flex-direction: column;
     /*margin-right: 100px;*/
     /*margin-left: 100px;*/
 }
 
-.answers-div, .answer-div-one, .answer-div-two, .answer-div-three, .answer-div-four, .winning-answer, .answers-and-chart-div {
+.answers-div, .answer-div-one, .answer-div-two, .answer-div-three, .answer-div-four, .winning-answer, .answers-and-chart-div, .fastest-player-answer-div {
     display: flex;
     flex-direction: row;
     width: 100%;
@@ -26,6 +26,22 @@ html {
 .all-questions-div {
     text-align: left;
     align-items: flex-start;
+}
+
+.fastest-player-answer-post-text {
+    color: antiquewhite;
+    /*margin-left: 10px;*/
+}
+
+.fastest-player-answer-div {
+    margin-top: 20px;
+    /*height: 50px;*/
+    align-items: center;
+}
+
+.fastest-player-answer-text {
+    color: orangered;
+    align-self: flex-end;
 }
 
 .chart-div {
@@ -57,7 +73,7 @@ html {
 }
 
 .timer-div {
-    margin-top: 40px;
+    margin-top: 30px;
 }
 
 .prefix-static-answer {

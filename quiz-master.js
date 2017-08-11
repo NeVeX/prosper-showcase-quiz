@@ -76,6 +76,23 @@ exports.getCurrentScores = function (request, response) {
     return response.status(200).json(updatedCurrentScores);
 };
 
+exports.getStatisticsForQuestion = function (request, response) {
+    if ( request.nevex.isQuizMaster ) {
+        var questionNumber = request.query.number;
+        if ( questionNumber) {
+            var stats = questionApi.getStatisticsForQuestion(questionNumber);
+            // check if we have a fastest name - we can get the full name using the slack info
+            if ( stats && stats.fastestPlayerToCorrectlyAnswer ) {
+                stats.fastestPlayerToCorrectlyAnswer = slackApi.getSlackFullName(stats.fastestPlayerToCorrectlyAnswer);
+            }
+            return response.status(200).json(stats);
+        } else {
+            return response.status(422).json( {"error": "You must provide a question number"} );
+        }
+    } else {
+        return response.status(403).json({"error": "You are not authorized to view the statistics"});
+    }
+};
 
 function checkIsQuizMasterKeyCorrect(request) {
     var quizMasterKey = request.get(QUIZ_KEY_HEADER);

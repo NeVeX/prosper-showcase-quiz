@@ -96,18 +96,6 @@ exports.unPauseQuiz = function (request, response) {
     }
 };
 
-exports.getStatisticsForQuestion = function (request, response) {
-
-    if ( request.nevex.isQuizMaster ) {
-        var questionNumber = request.query.number;
-        if ( questionNumber) {
-            var stats = questionsService.getStatisticsForQuestion(questionNumber);
-            return response.status(200).json(stats);
-        } else {
-            return response.status(422).json( {"error": "You must provide a question number"} );
-        }
-    } else {
-        return response.status(403).json({"error": "You are not authorized to view the statistics"});
-    }
-
+exports.getStatisticsForQuestion = function (questionNumber) {
+    return questionsService.getStatisticsForQuestion(questionNumber);
 };

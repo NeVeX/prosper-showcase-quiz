@@ -59,6 +59,7 @@ exports.slackInteractive = function (request, response) {
 };
 
 
+
 exports.sendNewQuestionToSlackUsers = function (questionInformation) {
     console.log("Sending new question to slack users");
     var answersRawText = "1. "+questionInformation.answerOne+"\n2. "+questionInformation.answerTwo;
@@ -117,8 +118,6 @@ exports.sendNewQuestionToSlackUsers = function (questionInformation) {
             sendMessageToSlack(slackUserInfo[slackName].slackPersonalChannelName, slackQuestion, slackAttachments)
         }
     }
-
-
 };
 
 function checkSlackRequestAuthentication(token, response) {
@@ -219,7 +218,7 @@ function setPersonalChannelIdForUser(playerInfo) {
                             // Only send a message to the person if the slash command channel is different to the personal channel
                         if ( playerInfo.slackPersonalChannelName && playerInfo.wantsToPlayInteractively ) {
                             var name = playerInfo.firstName ? playerInfo.firstName : playerInfo.slackPersonalChannelName;
-                            var message = "Oh hai "+name+"! I'll post the quiz questions for you, here in this channel.";
+                            var message = "Oh hai "+name+"! I'll post the quiz questions for you here in this channel.";
                             sendSimpleSlackMessageToChannel(playerInfo.slackPersonalChannelName, message);
                         }
                     }
@@ -288,16 +287,21 @@ exports.updateCurrentScoresWithUserInfo = function (currentScores) {
         if ( currentScores.hasOwnProperty(score)) {
             var slackName = currentScores[score].name;
             // try and find this name in the player info we have
-            if (slackUserInfo.hasOwnProperty(slackName)) {
-                var playerInfo = slackUserInfo[slackName];
-                if (playerInfo.firstName && playerInfo.lastName) {
-                    // set this new information on the current score
-                    currentScores[score].name = playerInfo.firstName + " " + playerInfo.lastName;
-                }
-            }
+            currentScores[score].name = this.getSlackFullName(slackName);
         }
     }
     return currentScores; // return the (possibly) updated data
+};
+
+exports.getSlackFullName = function (username) {
+    // try and find this name in the player info we have
+    if (slackUserInfo.hasOwnProperty(username)) {
+        var playerInfo = slackUserInfo[username];
+        if (playerInfo.firstName && playerInfo.lastName) {
+            return playerInfo.firstName + " " + playerInfo.lastName;
+        }
+    }
+    return username; // default to returning the given name
 };
 
 exports.quizHasStarted = function () {
