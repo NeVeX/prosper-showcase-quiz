@@ -24,7 +24,7 @@ var quizMasterKey;
 function init() {
 
     $("#scores-div").hide();
-    $(FASTEST_ANSWER_DIV).hide();
+
     fadeAllAnswerDivsToOpacityZero();
     $("#timer-text").fadeTo(1, 0);
     // hideChart();
@@ -137,7 +137,7 @@ function startAllTheTimers(timeAllowedSeconds, howManyQuestionsInPlay, currentQu
                     clearInterval(checkForFastestPlayerInterval);
 
                     $(FASTEST_ANSWER_PLAYER_NAME).text(data.fastestPlayerToCorrectlyAnswer);
-                    $(FASTEST_ANSWER_DIV).show();
+                    $(FASTEST_ANSWER_DIV).fadeTo(0, 1);
                 }
             },
             function (error) {
@@ -300,10 +300,13 @@ function fadeAllAnswerDivsToOpacityZero() {
     fadeAnswerDivToOpacityZero(2, 1);
     fadeAnswerDivToOpacityZero(3, 1);
     fadeAnswerDivToOpacityZero(4, 1);
+
+    $(FASTEST_ANSWER_DIV).fadeTo(0, 0);
+
 }
 
 function showAllAnswers() {
-    $("#all-questions-div").show();
+    $("#all-questions-div").fadeTo(1, 1);
 
     $(ANSWER_DIV_ONE).fadeTo(1, 1);
     $(ANSWER_DIV_TWO).fadeTo(1, 1);
@@ -328,9 +331,9 @@ function resetAllAnswersForNewQuestion() {
 }
 
 function hideAllAnswers() {
-    $("#all-questions-div").hide();
+    $("#all-questions-div").fadeTo(0, 0); // maintain space in browser (don't collapse)
     $(FASTEST_ANSWER_PLAYER_NAME).text("");
-    $(FASTEST_ANSWER_DIV).hide();
+    $(FASTEST_ANSWER_DIV).fadeTo(0, 0);
 }
 
 

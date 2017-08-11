@@ -17,7 +17,7 @@ html {
     /*margin-left: 100px;*/
 }
 
-.answers-div, .answer-div-one, .answer-div-two, .answer-div-three, .answer-div-four, .winning-answer, .answers-and-chart-div, .fastest-player-answer-div {
+.answers-div, .answer-div-one, .answer-div-two, .answer-div-three, .answer-div-four, .winning-answer, .answers-and-chart-div {
     display: flex;
     flex-direction: row;
     width: 100%;
@@ -34,7 +34,9 @@ html {
 }
 
 .fastest-player-answer-div {
-    margin-top: 20px;
+    display: flex;
+    flex-direction: row;
+    margin-top: 30px;
     /*height: 50px;*/
     align-items: center;
 }
@@ -73,7 +75,7 @@ html {
 }
 
 .timer-div {
-    margin-top: 30px;
+    margin-top: 15px;
 }
 
 .prefix-static-answer {
