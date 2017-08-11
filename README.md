@@ -5,6 +5,16 @@ To play, this node app is shown on screen and simultaneously will accept slack c
 
 ##### Release Notes
 
+#### `1.5.0`
+
+* Added new feature where the first player to answer correct gets bonus points
+  * The player's name is displayed on screen while the question shows also; bragging rights of sorts
+  * The `/stats` API will return the player who is the first (using slack to get the full name if possible)
+* Updated the UI
+  * Added the first player to answer correct
+  * Fixed some layout issues
+  * Added coloring to the correct answer 
+
 #### `1.4.0`
 
 * Added API to dynamically change the questions for the quiz at any time
