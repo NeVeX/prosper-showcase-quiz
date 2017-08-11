@@ -31,7 +31,7 @@ app.get('/prosperquiz/questions', quizMaster.getQuestionForNumber);
 app.post('/prosperquiz/questions', questionsApi.setQuestions);
 app.get('/prosperquiz/answers', questionsApi.getAnswerForQuestion);
 app.get('/prosperquiz/scores', quizMaster.getCurrentScores);
-app.get('/prosperquiz/stats', questionsApi.getStatisticsForQuestion);
+app.get('/prosperquiz/stats', quizMaster.getStatisticsForQuestion);
 app.patch('/prosperquiz/scores', questionsApi.reduceScoreBonus);
 app.post('/prosperquiz/slack/sendquestion', quizMaster.sendQuestionToSlack);
 

@@ -10,6 +10,9 @@ if (!QUIZ_SLACK_TOKEN) {
     throw new Error("No application quiz key defined");
 }
 
+console.log("Will use slack oauth token: "+APPLICATION_SLACK_OAUTH_TOKEN);
+console.log("Will use slack interactive token key: "+QUIZ_SLACK_TOKEN);
+
 var questionService = require('./questions-service');
 var request = require('request');
 
@@ -57,6 +60,7 @@ exports.slackInteractive = function (request, response) {
         return recordSlackAnswer(name, textEntered, response);
     }
 };
+
 
 
 exports.sendNewQuestionToSlackUsers = function (questionInformation) {
@@ -117,14 +121,13 @@ exports.sendNewQuestionToSlackUsers = function (questionInformation) {
             sendMessageToSlack(slackUserInfo[slackName].slackPersonalChannelName, slackQuestion, slackAttachments)
         }
     }
-
-
 };
 
 function checkSlackRequestAuthentication(token, response) {
-    if ( token && token === QUIZ_SLACK_TOKEN ) {
+    if ( token && token == QUIZ_SLACK_TOKEN ) {
         return null; // all good
     } else {
+        console.log("Provided slack message token is not correct: ["+token+"] != ["+QUIZ_SLACK_TOKEN+"]");
         return response.status(403).json({});
     }
 }
@@ -219,7 +222,7 @@ function setPersonalChannelIdForUser(playerInfo) {
                             // Only send a message to the person if the slash command channel is different to the personal channel
                         if ( playerInfo.slackPersonalChannelName && playerInfo.wantsToPlayInteractively ) {
                             var name = playerInfo.firstName ? playerInfo.firstName : playerInfo.slackPersonalChannelName;
-                            var message = "Oh hai "+name+"! I'll post the quiz questions for you, here in this channel.";
+                            var message = "Oh hai "+name+"! I'll post the quiz questions for you here in this channel.";
                             sendSimpleSlackMessageToChannel(playerInfo.slackPersonalChannelName, message);
                         }
                     }
@@ -288,16 +291,21 @@ exports.updateCurrentScoresWithUserInfo = function (currentScores) {
         if ( currentScores.hasOwnProperty(score)) {
             var slackName = currentScores[score].name;
             // try and find this name in the player info we have
-            if (slackUserInfo.hasOwnProperty(slackName)) {
-                var playerInfo = slackUserInfo[slackName];
-                if (playerInfo.firstName && playerInfo.lastName) {
-                    // set this new information on the current score
-                    currentScores[score].name = playerInfo.firstName + " " + playerInfo.lastName;
-                }
-            }
+            currentScores[score].name = this.getSlackFullName(slackName);
         }
     }
     return currentScores; // return the (possibly) updated data
+};
+
+exports.getSlackFullName = function (username) {
+    // try and find this name in the player info we have
+    if (slackUserInfo.hasOwnProperty(username)) {
+        var playerInfo = slackUserInfo[username];
+        if (playerInfo.firstName && playerInfo.lastName) {
+            return playerInfo.firstName + " " + playerInfo.lastName;
+        }
+    }
+    return username; // default to returning the given name
 };
 
 exports.quizHasStarted = function () {

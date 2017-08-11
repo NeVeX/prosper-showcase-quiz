@@ -2,11 +2,12 @@ $( document ).ready(function() {
     init();
 });
 
-var QUESTION_SHOWN_WITHOUT_ANSWERS_TIME_MS = 5000;
+var QUESTION_SHOWN_WITHOUT_ANSWERS_PER_CHARACTER_SIZE = 20;
 var CORRECT_ANSWER_SHOWN_TIME_MS = 3000;
 var SHOW_GAME_OVER_TIME_MS = 5500;
 var SHOW_STATS_TIME_MS = 6000;
 var ANSWER_WRONG_CLASS_NAME = "answer-wrong";
+var ANSWER_RIGHT_CLASS_NAME = "answer-right";
 
 var ANSWER_DIV_ONE = "#answer-div-one";
 var ANSWER_DIV_TWO = "#answer-div-two";
@@ -16,12 +17,15 @@ var ANSWER_DIV_FOUR = "#answer-div-four";
 var ANSWER_QUESTION_PREFIX = "#answer-prefix-";
 var ANSWER_PREFIX = "#answer-text-";
 var ANSWER_STAT_PREFIX = "#answer-percent-stat-";
+var FASTEST_ANSWER_DIV = "#fastest-player-answer-div";
+var FASTEST_ANSWER_PLAYER_NAME = "#fastest-answer-player-name";
 
 var quizMasterKey;
 
 function init() {
 
     $("#scores-div").hide();
+
     fadeAllAnswerDivsToOpacityZero();
     $("#timer-text").fadeTo(1, 0);
     // hideChart();
@@ -99,8 +103,14 @@ function onQuizDataReturned(questionNumber, data) {
     }
     var isMoreQuestions = questionNumber < data.totalQuestions;
 
-    setTimeout(showAllTheAnswers, QUESTION_SHOWN_WITHOUT_ANSWERS_TIME_MS, questionNumber, data, howManyQuestionsInPlay, isMoreQuestions);
+    // determine the dynamic read speed (roughly)
+    var timeToWaitMs = 1000;
+    if ( data.question.length > QUESTION_SHOWN_WITHOUT_ANSWERS_PER_CHARACTER_SIZE) {
+        timeToWaitMs = (data.question.length / QUESTION_SHOWN_WITHOUT_ANSWERS_PER_CHARACTER_SIZE) * 1000;
+    }
+    console.log("Determined to show the question for a dynamic wait time of ["+timeToWaitMs+"]");
 
+    setTimeout(showAllTheAnswers, timeToWaitMs, questionNumber, data, howManyQuestionsInPlay, isMoreQuestions);
 }
 
 function showAllTheAnswers(questionNumber, data, howManyQuestionsInPlay, isMoreQuestions) {
@@ -110,7 +120,6 @@ function showAllTheAnswers(questionNumber, data, howManyQuestionsInPlay, isMoreQ
         showAllAnswers();
         startAllTheTimers(data.timeAllowedSeconds, howManyQuestionsInPlay, questionNumber, isMoreQuestions);
     });
-
 }
 
 function startAllTheTimers(timeAllowedSeconds, howManyQuestionsInPlay, currentQuestion, isMoreQuestions) {
@@ -120,11 +129,32 @@ function startAllTheTimers(timeAllowedSeconds, howManyQuestionsInPlay, currentQu
 
     var timeLeft = timeAllowedSeconds;
     $("#timer-text").text(timeLeft);
+
+    var checkForFastestPlayerInterval = setInterval(function () {
+        getStatsForQuestion(currentQuestion,
+            function (data) {
+                if ( data && data.fastestPlayerToCorrectlyAnswer ) {
+                    console.log("Got a fastest player answer ["+data.fastestPlayerToCorrectlyAnswer+"]");
+                    clearInterval(checkForFastestPlayerInterval);
+
+                    $(FASTEST_ANSWER_PLAYER_NAME).text(data.fastestPlayerToCorrectlyAnswer);
+                    $(FASTEST_ANSWER_DIV).fadeTo(0, 1);
+                }
+            },
+            function (error) {
+                if ( quizMasterKey ) {
+                    onError(error);
+                }
+            }
+        );
+    }, 250);
+
     var timeLeftInterval = setInterval(function() {
         $("#timer-text").text(timeLeft--);
         if(timeLeft < 0) {
-            console.log("Timer is done");
+            console.log("This round is now over");
             clearInterval(timeLeftInterval);
+            clearInterval(checkForFastestPlayerInterval); // stop trying to get the fastest person
             onTimeElapsedForQuestion(currentQuestion, isMoreQuestions, howManyQuestionsInPlay);
         }
     }, 1000);
@@ -152,8 +182,6 @@ function sendQuestionToSlackUsers(questionNumber, onSuccessFunction) {
             }
         }
     });
-
-
 }
 
 // TODO: Remove this duplicated code - merge it below
@@ -244,29 +272,36 @@ function startQuestionRemovalTimerUsingGivenCorrectAnswer(answerNumber, howManyQ
 }
 
 function removeWrongAnswerClassToQuestion(questionNumber) {
-    changeWrongClassForAnswer(questionNumber, false);
+    changeWrongClassForAnswer(questionNumber, false, ANSWER_WRONG_CLASS_NAME);
 }
 
 function addWrongAnswerClassToQuestion(questionNumber) {
-    changeWrongClassForAnswer(questionNumber, true);
+    changeWrongClassForAnswer(questionNumber, true, ANSWER_WRONG_CLASS_NAME);
 }
 
-function changeWrongClassForAnswer(questionNumber, isAddingClass) {
+function removeRightAnswerClassToQuestion(questionNumber) {
+    changeWrongClassForAnswer(questionNumber, false, ANSWER_RIGHT_CLASS_NAME);
+}
+
+function addRightAnswerClassToQuestion(questionNumber) {
+    changeWrongClassForAnswer(questionNumber, true, ANSWER_RIGHT_CLASS_NAME);
+}
+
+function changeWrongClassForAnswer(questionNumber, isAddingClass, className) {
 
     var questionPrefix = ANSWER_QUESTION_PREFIX + getWordForNumber(questionNumber);
     var answer = ANSWER_PREFIX + getWordForNumber(questionNumber);
     var stats = ANSWER_STAT_PREFIX + getWordForNumber(questionNumber);
 
     if ( isAddingClass ) {
-        $(questionPrefix).addClass(ANSWER_WRONG_CLASS_NAME);
-        $(answer).addClass(ANSWER_WRONG_CLASS_NAME);
-        $(stats).addClass(ANSWER_WRONG_CLASS_NAME);
+        $(questionPrefix).addClass(className);
+        $(answer).addClass(className);
+        $(stats).addClass(className);
     } else {
-        $(questionPrefix).removeClass(ANSWER_WRONG_CLASS_NAME);
-        $(answer).removeClass(ANSWER_WRONG_CLASS_NAME);
-        $(stats).removeClass(ANSWER_WRONG_CLASS_NAME);
+        $(questionPrefix).removeClass(className);
+        $(answer).removeClass(className);
+        $(stats).removeClass(className);
     }
-
 }
 
 function fadeAllAnswerDivsToOpacityZero() {
@@ -274,11 +309,13 @@ function fadeAllAnswerDivsToOpacityZero() {
     fadeAnswerDivToOpacityZero(2, 1);
     fadeAnswerDivToOpacityZero(3, 1);
     fadeAnswerDivToOpacityZero(4, 1);
+
+    $(FASTEST_ANSWER_DIV).fadeTo(0, 0);
+
 }
 
-
 function showAllAnswers() {
-    $("#all-questions-div").show();
+    $("#all-questions-div").fadeTo(1, 1);
 
     $(ANSWER_DIV_ONE).fadeTo(1, 1);
     $(ANSWER_DIV_TWO).fadeTo(1, 1);
@@ -295,6 +332,11 @@ function resetAllAnswersForNewQuestion() {
     removeWrongAnswerClassToQuestion(3);
     removeWrongAnswerClassToQuestion(4);
 
+    removeRightAnswerClassToQuestion(1);
+    removeRightAnswerClassToQuestion(2);
+    removeRightAnswerClassToQuestion(3);
+    removeRightAnswerClassToQuestion(4);
+
     $(ANSWER_STAT_PREFIX+getWordForNumber(1)).text("");
     $(ANSWER_STAT_PREFIX+getWordForNumber(2)).text("");
     $(ANSWER_STAT_PREFIX+getWordForNumber(3)).text("");
@@ -303,7 +345,9 @@ function resetAllAnswersForNewQuestion() {
 }
 
 function hideAllAnswers() {
-    $("#all-questions-div").hide();
+    $("#all-questions-div").fadeTo(0, 0); // maintain space in browser (don't collapse)
+    $(FASTEST_ANSWER_PLAYER_NAME).text("");
+    $(FASTEST_ANSWER_DIV).fadeTo(0, 0);
 }
 
 
@@ -359,6 +403,8 @@ function onAnswerToQuestionReturned(answer, currentQuestion, isMoreQuestions, ho
         if ( !(i === answer)) {
             // fadeAnswerDivToOpacityZero(i, 1000);
             addWrongAnswerClassToQuestion(i);
+        } else {
+            addRightAnswerClassToQuestion(i);
         }
     }
 
@@ -366,24 +412,30 @@ function onAnswerToQuestionReturned(answer, currentQuestion, isMoreQuestions, ho
         clearInterval(showAnswerInterval); // stop it
         // fadeAnswerDivToOpacityZero(answer, 1);
         // hideAllAnswers();
-        getStatsForQuestion(currentQuestion, isMoreQuestions, howManyAnswersInPlay);
+        getStatsForQuestion(currentQuestion,
+            function (data) {
+                showStats(data, currentQuestion, isMoreQuestions);
+            },
+            function (error) {
+                if ( quizMasterKey ) {
+                    onError(error);
+                }
+            }
+        );
 
-    }, CORRECT_ANSWER_SHOWN_TIME_MS); // show it for a 2 seconds
+    }, CORRECT_ANSWER_SHOWN_TIME_MS); // show it for a moment
 }
 
-function getStatsForQuestion(currentQuestion, isMoreQuestions, totalAnswersInPlay) {
+function getStatsForQuestion(currentQuestion, onSuccess, onFailure) {
     $.ajax({
         type: "GET",
         headers: { "Quiz-Key" : quizMasterKey },
         url: "stats?number="+currentQuestion,
         success: function(data) {
-            showStats(data, currentQuestion, isMoreQuestions);
-            // showChartStatisticsForQuestion(data, totalAnswersInPlay);
+            onSuccess(data);
         },
         error: function(error) {
-            if ( quizMasterKey ) {
-                onError(error);
-            }
+            onFailure(error);
         }
     });
 }
@@ -538,7 +590,6 @@ function onScoresReturned(scores) {
         $(scoresTextId).html(noAnswersHtml);
     }
 }
-
 
 function onError(error) {
     console.log("Error occurred: "+error);

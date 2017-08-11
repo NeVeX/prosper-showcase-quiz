@@ -1,6 +1,5 @@
 var fs = require('fs');
 
-
 var allPlayerScores = {};
 var answerStatistics = {};
 var questions = null;
@@ -10,7 +9,7 @@ var currentAnswersInUse = null;
 var isQuizPaused = false;
 var isQuizStopped = true;
 
-loadQuestionsFromFile('config/questions.2017-07-21.json'); // default questions
+loadQuestionsFromFile('config/questions.2017-08-11.json'); // default questions
 
 function loadQuestionsFromFile(fileName) {
     var questionsJson = fs.readFileSync(fileName);
@@ -118,7 +117,7 @@ exports.getStatisticsForQuestion = function(questionNumber) {
     }
     var statsQuestion = answerStatistics[questionNumber];
     if ( !statsQuestion ) {
-        return { error: "There are no stats at this time"};
+        statsQuestion = {}; // default to empty
     }
 
     var totalAnswers = statsQuestion.totalAnswers ? statsQuestion.totalAnswers : 0;
@@ -145,6 +144,7 @@ exports.getStatisticsForQuestion = function(questionNumber) {
         "answerTwoPercent" : answerTwoPercent,
         "answerThreePercent" : answerThreePercent,
         "answerFourPercent" : answerFourPercent,
+        "fastestPlayerToCorrectlyAnswer": statsQuestion.fastestPlayerToCorrectlyAnswer,
         "totalAnswers": totalAnswers
     }
 
@@ -152,6 +152,7 @@ exports.getStatisticsForQuestion = function(questionNumber) {
 
 exports.generateTestData = function() {
 
+    // TODO: make this waaaay better - actually make it more random and support dynamic question answer sizes!
     var totalQuestions = questions.length;
     var i;
     for (i = 1; i < 100; i++) {
@@ -166,7 +167,7 @@ exports.generateTestData = function() {
             recordPlayerAnswerWithGameState(name, answer, q, 4);
         }
     }
-    console.log("Generated test data for ["+allPlayerScores.length+"] players");
+    console.log("Successfully generated test data");
     return true;
 };
 
@@ -295,7 +296,8 @@ function recordPlayerAnswerWithGameState(name, answerGiven, questionInPlay, answ
         return { error: "Looks like you already answered question "+questionInPlay+" - I can't let you answer it again"};
     }
 
-    if ( correctAnswer == answerGiven) {
+    var isAnswerCorrect = correctAnswer == answerGiven;
+    if ( isAnswerCorrect ) {
         allPlayerScores[name][questionInPlay] = scoreAmount; // Give them the score
     } else {
         allPlayerScores[name][questionInPlay] = 0; // Give them nothing
@@ -303,9 +305,27 @@ function recordPlayerAnswerWithGameState(name, answerGiven, questionInPlay, answ
 
     if ( answerGiven > 0 && answerGiven <= getTotalAnswersForQuestion(currentQuestion) ) {
         updateStatistics(questionInPlay, answerGiven);
+
+        // If the answer is correct, see if this person is the first to answer - give them more points if so
+        if ( isAnswerCorrect ) {
+            var bonusScoreToAdd = getScoreForFastestCorrectAnswer(questionInPlay, answersInUse, name);
+            allPlayerScores[name][questionInPlay] += bonusScoreToAdd;
+        }
     }
 
     return { currentQuestion: questionInPlay};
+}
+
+function getScoreForFastestCorrectAnswer(questionNumber, answersInUse, playerName) {
+    // Only get a bonus score if the current question does not have a fastest player added already
+    if ( answerStatistics[questionNumber] && !answerStatistics[questionNumber].fastestPlayerToCorrectlyAnswer) {
+        answerStatistics[questionNumber].fastestPlayerToCorrectlyAnswer = playerName;
+        // The bonus will be equal to the current top score amount in play
+        var bonusScore = getScoreAmountForAnswersLeft(answersInUse);
+        console.log("Player ["+playerName+"] will get a bonus score of ["+bonusScore+"] for answering the fastest");
+        return bonusScore;
+    }
+    return 0; // no bonus points
 }
 
 function updateStatistics(currentQuestion, answerGiven) {
