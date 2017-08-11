@@ -89,7 +89,7 @@ html {
     width: 90%;
 }
 
-.answer-wrong {
+.answer-wrong, .answer-right {
     opacity: 0.6;
     /*text-decoration: line-through;*/
     color: firebrick;
@@ -97,6 +97,11 @@ html {
     -o-transition: all 1.4s ease-in;
     -webkit-transition: all 1.4s ease-in;
     transition: all 1.4s ease-in;
+}
+
+.answer-right {
+    opacity: 1;
+    color: mediumseagreen;
 }
 
 .percent-stat {

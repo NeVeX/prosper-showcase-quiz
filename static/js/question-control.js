@@ -7,6 +7,7 @@ var CORRECT_ANSWER_SHOWN_TIME_MS = 3000;
 var SHOW_GAME_OVER_TIME_MS = 5500;
 var SHOW_STATS_TIME_MS = 6000;
 var ANSWER_WRONG_CLASS_NAME = "answer-wrong";
+var ANSWER_RIGHT_CLASS_NAME = "answer-right";
 
 var ANSWER_DIV_ONE = "#answer-div-one";
 var ANSWER_DIV_TWO = "#answer-div-two";
@@ -271,27 +272,35 @@ function startQuestionRemovalTimerUsingGivenCorrectAnswer(answerNumber, howManyQ
 }
 
 function removeWrongAnswerClassToQuestion(questionNumber) {
-    changeWrongClassForAnswer(questionNumber, false);
+    changeWrongClassForAnswer(questionNumber, false, ANSWER_WRONG_CLASS_NAME);
 }
 
 function addWrongAnswerClassToQuestion(questionNumber) {
-    changeWrongClassForAnswer(questionNumber, true);
+    changeWrongClassForAnswer(questionNumber, true, ANSWER_WRONG_CLASS_NAME);
 }
 
-function changeWrongClassForAnswer(questionNumber, isAddingClass) {
+function removeRightAnswerClassToQuestion(questionNumber) {
+    changeWrongClassForAnswer(questionNumber, false, ANSWER_RIGHT_CLASS_NAME);
+}
+
+function addRightAnswerClassToQuestion(questionNumber) {
+    changeWrongClassForAnswer(questionNumber, true, ANSWER_RIGHT_CLASS_NAME);
+}
+
+function changeWrongClassForAnswer(questionNumber, isAddingClass, className) {
 
     var questionPrefix = ANSWER_QUESTION_PREFIX + getWordForNumber(questionNumber);
     var answer = ANSWER_PREFIX + getWordForNumber(questionNumber);
     var stats = ANSWER_STAT_PREFIX + getWordForNumber(questionNumber);
 
     if ( isAddingClass ) {
-        $(questionPrefix).addClass(ANSWER_WRONG_CLASS_NAME);
-        $(answer).addClass(ANSWER_WRONG_CLASS_NAME);
-        $(stats).addClass(ANSWER_WRONG_CLASS_NAME);
+        $(questionPrefix).addClass(className);
+        $(answer).addClass(className);
+        $(stats).addClass(className);
     } else {
-        $(questionPrefix).removeClass(ANSWER_WRONG_CLASS_NAME);
-        $(answer).removeClass(ANSWER_WRONG_CLASS_NAME);
-        $(stats).removeClass(ANSWER_WRONG_CLASS_NAME);
+        $(questionPrefix).removeClass(className);
+        $(answer).removeClass(className);
+        $(stats).removeClass(className);
     }
 }
 
@@ -322,6 +331,11 @@ function resetAllAnswersForNewQuestion() {
     removeWrongAnswerClassToQuestion(2);
     removeWrongAnswerClassToQuestion(3);
     removeWrongAnswerClassToQuestion(4);
+
+    removeRightAnswerClassToQuestion(1);
+    removeRightAnswerClassToQuestion(2);
+    removeRightAnswerClassToQuestion(3);
+    removeRightAnswerClassToQuestion(4);
 
     $(ANSWER_STAT_PREFIX+getWordForNumber(1)).text("");
     $(ANSWER_STAT_PREFIX+getWordForNumber(2)).text("");
@@ -389,6 +403,8 @@ function onAnswerToQuestionReturned(answer, currentQuestion, isMoreQuestions, ho
         if ( !(i === answer)) {
             // fadeAnswerDivToOpacityZero(i, 1000);
             addWrongAnswerClassToQuestion(i);
+        } else {
+            addRightAnswerClassToQuestion(i);
         }
     }
 
