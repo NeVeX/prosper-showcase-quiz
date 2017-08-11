@@ -10,6 +10,9 @@ if (!QUIZ_SLACK_TOKEN) {
     throw new Error("No application quiz key defined");
 }
 
+console.log("Will use slack oauth token: "+APPLICATION_SLACK_OAUTH_TOKEN);
+console.log("Will use slack interactive token key: "+QUIZ_SLACK_TOKEN);
+
 var questionService = require('./questions-service');
 var request = require('request');
 
@@ -121,9 +124,10 @@ exports.sendNewQuestionToSlackUsers = function (questionInformation) {
 };
 
 function checkSlackRequestAuthentication(token, response) {
-    if ( token && token === QUIZ_SLACK_TOKEN ) {
+    if ( token && token == QUIZ_SLACK_TOKEN ) {
         return null; // all good
     } else {
+        console.log("Provided slack message token is not correct: ["+token+"] != ["+QUIZ_SLACK_TOKEN+"]");
         return response.status(403).json({});
     }
 }

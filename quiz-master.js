@@ -1,8 +1,11 @@
 var QUIZ_MASTER_KEY = process.env.QUIZ_MASTER_KEY;
 
+
 if ( !QUIZ_MASTER_KEY) {
     throw new Error("No quiz master key defined");
 }
+
+console.log("Will use quiz master key: "+QUIZ_MASTER_KEY);
 
 var QUIZ_KEY_HEADER = "Quiz-Key";
 
