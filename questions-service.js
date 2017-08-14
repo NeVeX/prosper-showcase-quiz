@@ -1,9 +1,6 @@
 var Promise = require('bluebird');
 var fs = Promise.promisifyAll(require("fs"));
 
-var container = require("./dependency/container");
-var questionValidator = container.questionValidator;
-
 var allPlayerScores = {};
 var answerStatistics = {};
 var questions = null;
@@ -13,6 +10,12 @@ var currentAnswersInUse = null;
 var isQuizPaused = false;
 var isQuizStopped = true;
 var isQuizReady = false;
+
+
+function QuestionsService(questionValidator){
+    this.questionValidator = questionValidator;
+}
+
 
 loadQuestionsFromFile('config/questions.2017-08-11.json'); // default questions
 
@@ -29,7 +32,7 @@ function loadQuestionsFromFile(fileName) {
     });
 }
 
-exports.loadQuestionsFromJson = doLoadQuestionsFromJson;
+QuestionsService.prototype.loadQuestionsFromJson = doLoadQuestionsFromJson;
 
 function doLoadQuestionsFromJson(questionsJson) {
 
@@ -65,7 +68,7 @@ function doLoadQuestionsFromJson(questionsJson) {
     });
 }
 
-exports.startQuiz = function() {
+QuestionsService.prototype.startQuiz = function() {
     allPlayerScores = {};
     answerStatistics = {};
     console.log("Started a new game");
@@ -74,7 +77,7 @@ exports.startQuiz = function() {
     return true;
 };
 
-exports.setCurrentQuestion = function(questionNumber) {
+QuestionsService.prototype.setCurrentQuestion = function(questionNumber) {
     if ( questionNumber === currentAnswersInUse) {
         console.log("No setting question to ["+questionNumber+"] since that is the current question in play");
         return false;
@@ -89,7 +92,7 @@ exports.setCurrentQuestion = function(questionNumber) {
     return false;
 };
 
-exports.getStatisticsForQuestion = function(questionNumber) {
+QuestionsService.prototype.getStatisticsForQuestion = function(questionNumber) {
     if ( ! getQuestion(questionNumber) ) {
         return { error: "Question number ["+questionNumber+"] is invalid"};
     }
@@ -128,7 +131,7 @@ exports.getStatisticsForQuestion = function(questionNumber) {
 
 };
 
-exports.generateTestData = function() {
+QuestionsService.prototype.generateTestData = function() {
 
     // TODO: make this waaaay better - actually make it more random and support dynamic question answer sizes!
     var totalQuestions = questions.length;
@@ -147,14 +150,14 @@ exports.generateTestData = function() {
     return true;
 };
 
-exports.getAnswerForQuestion = function(questionNumber) {
+QuestionsService.prototype.getAnswerForQuestion = function(questionNumber) {
     var question = getQuestion(questionNumber);
     if ( question ) {
         return { answer: question.correctAnswer}
     }
 };
 
-exports.changeAnswersLeftDown = function() {
+QuestionsService.prototype.changeAnswersLeftDown = function() {
     var answersInUse = currentAnswersInUse;
     if ( answersInUse ) {
         var newScoreAmount = getScoreAmountForAnswersLeft(answersInUse);
@@ -171,13 +174,13 @@ exports.changeAnswersLeftDown = function() {
     return null;
 };
 
-exports.pauseQuiz = function() {
+QuestionsService.prototype.pauseQuiz = function() {
     console.log("Paused the game at question ["+currentQuestionInUse+"]");
     isQuizPaused = true;
     return true;
 };
 
-exports.unPauseQuiz = function() {
+QuestionsService.prototype.unPauseQuiz = function() {
     if ( currentQuestionInUse && currentAnswersInUse) {
         console.log("Un-Paused the game at question ["+currentQuestionInUse+"]");
         isQuizPaused = false;
@@ -210,7 +213,7 @@ function getTotalAnswersForQuestion(question) {
     return 1; // only one answer? (shouldn't happen)
 }
 
-exports.stopQuiz = function() {
+QuestionsService.prototype.stopQuiz = function() {
     this.pauseQuiz();
     isQuizStopped = true;
     return isQuizStopped;
@@ -224,7 +227,7 @@ function getQuestion(number) {
     return null;
 }
 
-exports.getQuestionForNumber = function(questionNumber) {
+QuestionsService.prototype.getQuestionForNumber = function(questionNumber) {
     var foundQuestion = getQuestion(questionNumber);
     if ( foundQuestion ) {
         // Don't return the direct question object, create the response we want to send to the client
@@ -241,7 +244,7 @@ exports.getQuestionForNumber = function(questionNumber) {
     return null;
 };
 
-exports.recordPlayerAnswer = function(name, answer) {
+QuestionsService.prototype.recordPlayerAnswer = function(name, answer) {
     return recordPlayerAnswerWithGameState(name, answer, currentQuestionInUse, currentAnswersInUse);
 };
 
@@ -319,7 +322,7 @@ function updateStatistics(currentQuestion, answerGiven) {
     answerStatistics[currentQuestion].totalAnswers++; // increment the total answers given too
 }
 
-exports.getCurrentScores = function() {
+QuestionsService.prototype.getCurrentScores = function() {
     var returnScores = [];
     for ( var playerName in allPlayerScores ) {
         var totalPlayerScore = 0;
@@ -334,3 +337,6 @@ exports.getCurrentScores = function() {
     }
     return returnScores;
 };
+
+
+module.exports = QuestionsService;
