@@ -53,13 +53,13 @@ function doLoadQuestionsFromJson(questionsJson) {
         // make sure each one is valid
     var errorsFound = [];
     var promises = [];
-    for (var i=0; i< parsedQuestions.length; i++) { //for var question in parsedQuestions was giving 1 and 0 instead of objects, very strange.
-        var question = parsedQuestions[i];
-        promises.push(this.questionValidator.validateQuestion(question)
-                        .catch(function(err){
-                            errorsFound.push("Invalid data for question ["+(i+1)+"] - " + err.message);
-                        }));
-    }
+    var validator = this.questionValidator;
+    promises = parsedQuestions.map(function(question){
+        return validator.validateQuestion(question)
+        .catch(function(err){
+            errorsFound.push("Invalid data for question ["+ JSON.stringify(question)+"] - " + err.message);
+        });
+    });
 
     return Promise.all(promises)
     .then(function(results){
@@ -165,19 +165,20 @@ QuestionsService.prototype.getAnswerForQuestion = function(questionNumber) {
 
 QuestionsService.prototype.changeAnswersLeftDown = function() {
     var answersInUse = currentAnswersInUse;
-    if ( answersInUse ) {
-        var newScoreAmount = getScoreAmountForAnswersLeft(answersInUse);
-        if ( answersInUse > 2 ) {
-            var previousScoreAmount = newScoreAmount;
-            --answersInUse;
-            newScoreAmount = getScoreAmountForAnswersLeft(answersInUse);
-            console.log("Changing scoreAmount from [" + previousScoreAmount + "] to [" + newScoreAmount + "]");
-            // Now set the score amount
-            currentAnswersInUse = answersInUse;
-        }
-        return newScoreAmount;
+    if ( !answersInUse ) {
+        return null;
     }
-    return null;
+
+    var newScoreAmount = getScoreAmountForAnswersLeft(answersInUse);
+    if ( answersInUse > 2 ) {
+        var previousScoreAmount = newScoreAmount;
+        --answersInUse;
+        newScoreAmount = getScoreAmountForAnswersLeft(answersInUse);
+        console.log("Changing scoreAmount from [" + previousScoreAmount + "] to [" + newScoreAmount + "]");
+        // Now set the score amount
+        currentAnswersInUse = answersInUse;
+    }
+    return newScoreAmount;
 };
 
 QuestionsService.prototype.pauseQuiz = function() {
@@ -331,6 +332,22 @@ function updateStatistics(currentQuestion, answerGiven) {
 
 QuestionsService.prototype.getCurrentScores = function() {
     var returnScores = [];
+
+    /*
+    allPlayerScores.filter(function(player){ 
+        return allPlayerScores.hasOwnProperty(player); 
+    }).map(function(playerName){
+        return allPlayerScores[playerName];
+    }).filter(function(questionNumber){ 
+        return allPlayerScores[playerName].hasOwnProperty(questionNumber)
+    }).reduce(function(previousValue, currentValue){
+        previousValue += allPlayerScores[playerName][currentValue];
+    }, 0);
+    
+    returnScores.push({"name": playerName, "score": totalPlayerScore});
+    */
+
+    
     for ( var playerName in allPlayerScores ) {
         var totalPlayerScore = 0;
         if ( allPlayerScores.hasOwnProperty(playerName) ) {
@@ -342,6 +359,7 @@ QuestionsService.prototype.getCurrentScores = function() {
         }
         returnScores.push({"name": playerName, "score": totalPlayerScore});
     }
+    
     return returnScores;
 };
 
