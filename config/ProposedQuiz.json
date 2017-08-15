@@ -1,0 +1,10 @@
+{
+    "quizName" : "Test Quiz",
+    "startedOn" : "2017-08-15 15:00:00.000",
+    "state" : "stopped", //started, stopped, completed
+    "questions" : [{
+        "question" : "How many servers (VM and physical) do we have running in PROD? (Phoenix)",
+        "answers" : ["~500", "~1000", "~1500", "~2000"],
+        "correctAnswer" : 2
+    }]
+}
