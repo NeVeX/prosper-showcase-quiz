@@ -6,19 +6,19 @@ module.exports = function(){
     var questionValidatorDef = require("../services/question-validator");
     container.questionValidator = new questionValidatorDef();
 
-    var questionsServiceDef = require("../questions-service");
+    var questionsServiceDef = require("../services/questions-service");
     container.questionsService = new questionsServiceDef(container.questionValidator);
 
-    var questionsApiDef = require('./questions-api');
+    var questionsApiDef = require('../api/questions-api');
     container.questionsApi = new questionsApiDef(container.questionsService);
 
-    var slackApiDef = require('./slack-api');
+    var slackApiDef = require('../api/slack-api');
     container.slackApi = new slackApiDef(container.config, container.questionsService);
 
-    var testApiDef = require('./test-api');
+    var testApiDef = require('../api/test-api');
     container.testApi = new testApiDef(container.questionsService);
 
-    var quizMasterDef = require('./quiz-master');
+    var quizMasterDef = require('../api/quiz-master');
     container.quizMaster = new quizMasterDef(config, container.questionsApi, container.slackApi);
 
     return container;
