@@ -1,4 +1,6 @@
 
+var fs = require('fs');
+
 module.exports = function(app){
 
     var landingPageHtml = fs.readFileSync('static/landing-page.html');
