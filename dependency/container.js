@@ -10,7 +10,7 @@ module.exports = function(){
     container.questionValidator = new questionValidatorDef();
 
     var questionsServiceDef = require("../services/questions-service");
-    container.questionsService = new questionsServiceDef(container.questionValidator);
+    container.questionsService = new questionsServiceDef(container.questionValidator, 'config/questions.2017-08-11.json');
 
     var questionsApiDef = require('../api/questions-api');
     container.questionsApi = new questionsApiDef(container.questionsService);

@@ -12,12 +12,13 @@ var isQuizStopped = true;
 var isQuizReady = false;
 
 
-function QuestionsService(questionValidator){
+function QuestionsService(questionValidator, fileToLoad){
     this.questionValidator = questionValidator;
+
+    if(fileToLoad){
+        loadQuestionsFromFile(fileToLoad); // default questions
+    }
 }
-
-
-loadQuestionsFromFile('config/questions.2017-08-11.json'); // default questions
 
 function loadQuestionsFromFile(fileName) {
     return fs.readFileAsync(fileName)
@@ -40,18 +41,23 @@ function doLoadQuestionsFromJson(questionsJson) {
         return Promise.reject({ isError: true, message: "Questions JSON is null/empty" });
     }
 
-    var parsedQuestions = JSON.parse(questionsJson);
-    // validate the json
-    if ( !parsedQuestions || parsedQuestions.length == 0 ) {
+    try{
+        var parsedQuestions = JSON.parse(questionsJson);
+        // validate the json
+        if ( !parsedQuestions || parsedQuestions.length == 0 ) {
+            return Promise.reject({ isError: true, message: "Could not load questions - no data found" });
+        }
+    } catch(e){
         return Promise.reject({ isError: true, message: "Could not load questions - "+e.message });
     }
         // make sure each one is valid
     var errorsFound = [];
     var promises = [];
-    for (var question in parsedQuestions) {
-        promises.push(questionValidator.validateQuestion(question)
+    for (var i=0; i< parsedQuestions.length; i++) { //for var question in parsedQuestions was giving 1 and 0 instead of objects, very strange.
+        var question = parsedQuestions[i];
+        promises.push(this.questionValidator.validateQuestion(question)
                         .catch(function(err){
-                            errorsFound.push("Invalid data for question ["+(i+1)+"] - "+problems.join("; "));
+                            errorsFound.push("Invalid data for question ["+(i+1)+"] - " + err.message);
                         }));
     }
 
