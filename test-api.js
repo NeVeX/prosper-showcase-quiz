@@ -1,12 +1,16 @@
 
-var questionsService = require('./questions-service');
+function TestApi(questionsService){
+    this.questionsService = questionsService;
+}
 
-exports.generateTestData = function (request, response) {
+TestApi.prototype.generateTestData = function (request, response) {
     console.log("New POST request received to /prosperquiz/test/data");
     if ( request.nevex.isQuizMaster ) {
-        var didGenerateData = questionsService.generateTestData();
+        var didGenerateData = this.questionsService.generateTestData();
         return response.status(200).json({"didGenerateData": didGenerateData});
-    } else {
-        return response.status(403).json({"error": "You are not authorized to generate test data"});
     }
+
+    return response.status(403).json({"error": "You are not authorized to generate test data"});
 };
+
+module.exports = TestApi;

@@ -5,10 +5,8 @@ var bodyParser = require('body-parser');
 var path = require('path');
 var fs = require('fs');
 var app = express();
-var quizMaster = require('./quiz-master');
 
 var container = require("./dependency/container");
-var questionsApi = require('./questions-api');
 var testApi = require('./test-api');
 
 var landingPageHtml = fs.readFileSync('static/landing-page.html');
@@ -25,8 +23,8 @@ app.use(function(request, response, next) {
     next();
 });
 
-require("./routes/question-routes")(app, questionsApi);
-require("./routes/quizMaster-routes")(app, quizMaster);
+require("./routes/question-routes")(app, container.questionsApi);
+require("./routes/quizMaster-routes")(app, container.quizMaster);
 require("./routes/slack-routes")(app, container.slackApi);
 
 app.post('/prosperquiz/test/data', testApi.generateTestData);
