@@ -7,7 +7,6 @@ var fs = require('fs');
 var app = express();
 
 var container = require("./dependency/container");
-var testApi = require('./test-api');
 
 var landingPageHtml = fs.readFileSync('static/landing-page.html');
 var questionsHtml = fs.readFileSync('static/question.html');
@@ -27,7 +26,7 @@ require("./routes/question-routes")(app, container.questionsApi);
 require("./routes/quizMaster-routes")(app, container.quizMaster);
 require("./routes/slack-routes")(app, container.slackApi);
 
-app.post('/prosperquiz/test/data', testApi.generateTestData);
+app.post('/prosperquiz/test/data', container.testApi.generateTestData);
 
 app.get('/prosperquiz', function(request, response) {
     response.setHeader('Content-Type', 'text/html');
