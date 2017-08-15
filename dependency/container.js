@@ -3,6 +3,9 @@ module.exports = function(){
 
     container.config = require("../config");
 
+    container.quizmasterCheck = require("../middleware/quizmaster-check");
+    container.quizmasterRequired = require("../middleware/quizmaster-required");
+
     var questionValidatorDef = require("../services/question-validator");
     container.questionValidator = new questionValidatorDef();
 

@@ -82,9 +82,7 @@ QuizMaster.prototype.getCurrentScores = function (request, response) {
 };
 
 QuizMaster.prototype.getStatisticsForQuestion = function (request, response) {
-    if ( !request.nevex.isQuizMaster ) {
-        return response.status(403).json({"error": "You are not authorized to view the statistics"});
-    }
+
     var questionNumber = request.query.number;
     if ( !questionNumber) {
         return response.status(422).json( {"error": "You must provide a question number"} );

@@ -15,15 +15,10 @@ app.use(bodyParser.urlencoded( { extended: false}));
 app.use(bodyParser.json());
 app.use('/prosperquiz', express.static(path.join(__dirname, 'static'))); // get references to the html's
 
-app.use(function(request, response, next) {
-    request.nevex = {};
-    // Set a simple boolean to indicate if this request is from the quiz master
-    request.nevex.isQuizMaster = quizMaster.isQuizMasterKeyCorrect(request);
-    next();
-});
+app.use(container.quizmasterCheck);
 
 require("./routes/question-routes")(app, container.questionsApi);
-require("./routes/quizMaster-routes")(app, container.quizMaster);
+require("./routes/quizMaster-routes")(app, container.quizMaster, container.quizmasterRequired);
 require("./routes/slack-routes")(app, container.slackApi);
 
 app.post('/prosperquiz/test/data', container.testApi.generateTestData);
@@ -38,7 +33,9 @@ app.get('/prosperquiz/start', function(request, response) {
     return response.status(200).end(questionsHtml);
 });
 
-module.exports = app;
 var portNumber = 34343;
 app.listen(portNumber);
 console.log('Server started and listening on port ['+portNumber+']...');
+
+module.exports = app;
+
