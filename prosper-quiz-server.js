@@ -8,9 +8,6 @@ var app = express();
 
 var container = require("./dependency/container");
 
-var landingPageHtml = fs.readFileSync('static/landing-page.html');
-var questionsHtml = fs.readFileSync('static/question.html');
-
 app.use(bodyParser.urlencoded( { extended: false}));
 app.use(bodyParser.json());
 app.use('/prosperquiz', express.static(path.join(__dirname, 'static'))); // get references to the html's
@@ -22,7 +19,6 @@ require("./routes/quizMaster-routes")(app, container.quizMaster, container.quizm
 require("./routes/slack-routes")(app, container.slackApi);
 require("./routes/test-routes")(app, container.testApi);
 require("./routes/static-routes")(app);
-
 
 
 var portNumber = 34343;
