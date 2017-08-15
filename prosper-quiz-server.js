@@ -20,18 +20,10 @@ app.use(container.quizmasterCheck);
 require("./routes/question-routes")(app, container.questionsApi);
 require("./routes/quizMaster-routes")(app, container.quizMaster, container.quizmasterRequired);
 require("./routes/slack-routes")(app, container.slackApi);
+require("./routes/test-routes")(app, container.testApi);
+require("./routes/static-routes")(app);
 
-app.post('/prosperquiz/test/data', container.testApi.generateTestData);
 
-app.get('/prosperquiz', function(request, response) {
-    response.setHeader('Content-Type', 'text/html');
-    return response.status(200).end(landingPageHtml);
-});
-
-app.get('/prosperquiz/start', function(request, response) {
-    response.setHeader('Content-Type', 'text/html');
-    return response.status(200).end(questionsHtml);
-});
 
 var portNumber = 34343;
 app.listen(portNumber);
