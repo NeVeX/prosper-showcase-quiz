@@ -5,6 +5,25 @@
     "questions" : [{
         "question" : "How many servers (VM and physical) do we have running in PROD? (Phoenix)",
         "answers" : ["~500", "~1000", "~1500", "~2000"],
-        "correctAnswer" : 2
+        "correctAnswer" : 2,
+        "timeAllowedInSeconds" : 33,
+        "pointValue" : 100
+    }, {
+        "question" : "How many servers (VM and physical) do we have running in PROD? (Phoenix)",
+        "answers" : ["~500", "~1000", "~1500", "~2000"],
+        "correctAnswer" : 2,
+        "timeAllowedInSeconds" : 33,
+        "pointValue" : 200
+    }],
+    "players" :[{
+        "name" : "Player1",
+        "answers": [2, 3],
+        "timeToAnswerInSeconds" : [1.865, 2.4],
+        "points": 100
+    }, {
+        "name" : "Player2",
+        "answers": [1, 2],
+        "timeToAnswerInSeconds" : [1.865, 2.4],
+        "points": 200
     }]
 }
