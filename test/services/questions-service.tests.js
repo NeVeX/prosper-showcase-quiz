@@ -67,6 +67,26 @@ describe("questions service", function(){
             assert.fail();
             done();
         })
-    })
+    });
+
+    it("should start a quiz", function(done){
+        assert.equal(service.startQuiz(), true);
+        done();
+    });
+
+    it("should pause a quiz", function(done){
+        assert.equal(service.pauseQuiz(), true);
+        done();
+    });
+
+    it("should not unpause a blank quiz", function(done){
+        assert.equal(service.unPauseQuiz(), false);
+        done();
+    });
+
+    it("should stop quiz", function(done){
+        assert.equal(service.stopQuiz(), true);
+        done();
+    });
 
 });

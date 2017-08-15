@@ -187,13 +187,14 @@ QuestionsService.prototype.pauseQuiz = function() {
 };
 
 QuestionsService.prototype.unPauseQuiz = function() {
-    if ( currentQuestionInUse && currentAnswersInUse) {
-        console.log("Un-Paused the game at question ["+currentQuestionInUse+"]");
-        isQuizPaused = false;
-        return true; // it's unpaused
+    if ( !currentQuestionInUse || !currentAnswersInUse) {
+        console.log("Cannot Un-Paused the game since question in play is not set");
+        return false; // the data isn't correct, so do not un pause
     }
-    console.log("Cannot Un-Paused the game since question in play is not set");
-    return false; // the data isn't correct, so do not un pause
+
+    console.log("Un-Paused the game at question ["+currentQuestionInUse+"]");
+    isQuizPaused = false;
+    return true; // it's unpaused
 };
 
 function getScoreAmountForAnswersLeft(currentAnswersInUse) {
