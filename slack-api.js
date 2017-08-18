@@ -48,7 +48,7 @@ exports.slackInteractive = function (request, response) {
     if ( textEntered === 'play') {
         console.log("Player ["+name+"] with userId ["+userId+"] has opted to join the quiz");
         addSlackUserInfo(name, true, userId, slashCommandChannelId);
-        return response.status(200).json( { text: "Hurrah! You've registered to be part of the amazing Prosper quiz extravaganza!"} );
+        return response.status(200).json( { text: "Hurrah! You've registered. Note, all further interaction will be done in the slackbot channel, so go there!"} );
     } else if ( textEntered === 'stop') {
         console.log("Player ["+name+"] has opted to stop playing in the the quiz");
         removeSlackUserFromQuiz(name);
@@ -254,7 +254,12 @@ function setProfileInfoForUser(playerInfo) {
                     if (firstName && lastName) {
                         playerInfo.firstName = firstName;
                         playerInfo.lastName = lastName;
+                        console.log("Got profile information for ["+playerInfo.userId+"] - ["+playerInfo.firstName+"] - ["+playerInfo.lastName+"]")
                     }
+                } else {
+                    // Somethings this happens - but it shouldn't since slack gives the profile info for each user
+                    // It mainly happens during quizzes, so logging a message this time to investigate after the fact
+                    console.log("Could not get profile information for ["+playerInfo.userId+"] - ["+playerInfo.name+"]")
                 }
                 setPersonalChannelIdForUser(playerInfo);
             }

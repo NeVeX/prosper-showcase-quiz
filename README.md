@@ -5,6 +5,13 @@ To play, this node app is shown on screen and simultaneously will accept slack c
 
 ##### Release Notes
 
+#### `1.6.0`
+
+* Added questions for the 18th of August 2017 quiz
+* Added logging to find out which people can never get their profile from slack (it's quite annoying)
+* Updated slack responses to make it clear to go to the `slackbot` channel
+* Updated slightly how long until wrong answers start to fade 
+
 #### `1.5.0`
 
 * Added new feature where the first player to answer correct gets bonus points
