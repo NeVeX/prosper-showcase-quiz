@@ -1,4 +1,8 @@
-var fs = require('fs');
+var Promise = require('bluebird');
+var fs = Promise.promisifyAll(require("fs"));
+
+var container = require("./dependency/container");
+var questionValidator = container.questionValidator;
 
 var allPlayerScores = {};
 var answerStatistics = {};
@@ -8,83 +12,57 @@ var currentAnswersInUse = null;
 
 var isQuizPaused = false;
 var isQuizStopped = true;
+var isQuizReady = false;
 
 loadQuestionsFromFile('config/questions.2017-08-18.json'); // default questions
 
 function loadQuestionsFromFile(fileName) {
-    var questionsJson = fs.readFileSync(fileName);
-    var loadResult = doLoadQuestionsFromJson(questionsJson);
-    if ( !loadResult || loadResult.isError ) {
-        throw Error("Could not load questions from file "+fileName);
-    }
+    return fs.readFileAsync(fileName)
+    .then(function(questionsJson){
+        return doLoadQuestionsFromJson(questionsJson);;
+    })
+    .then(function(result){
+        isQuizReady = true;
+    })
+    .catch(function(err){
+        throw Error("Could not load questions from file "+fileName);    
+    });
 }
 
 exports.loadQuestionsFromJson = doLoadQuestionsFromJson;
 
-function validateQuestion(question) {
-    var problems = [];
-    if ( !question.question ) { problems.push("There is no valid question"); }
-    if ( !question.answerOne ) { problems.push("Answer one is not valid"); }
-    if ( !question.answerTwo ) { problems.push("Answer two is not valid"); }
-    if ( !question.correctAnswer || question.correctAnswer < 1 || question.correctAnswer > 4 ) {
-        problems.push("There is no valid correct answer");
-    }
-    if ( !question.timeAllowedSeconds || question.timeAllowedSeconds < 1) {
-        problems.push("The time allowed in seconds is not valid");
-    }
-
-    // Check the optional questions
-    if ( !question.answerThree && question.answerFour) { problems.push("Cannot have answer four when there is no answer three"); }
-
-    if ( !question.answerThree && !question.answerFour && question.correctAnswer > 2) {
-        problems.push("Cannot have correct answer greater than answers given");
-    }
-    if ( question.answerThree && !question.answerFour && question.correctAnswer > 3) {
-        problems.push("Cannot have correct answer greater than answers given");
-    }
-
-    // TODO: Remove the below rules when we can allow less than 4 answers
-    if ( !question.answerThree ) { problems.push("Answer three is not valid (cannot allow less than 4 answers currently)"); }
-    if ( !question.answerFour ) { problems.push("Answer four is not valid (cannot allow less than 4 answers currently)"); }
-
-    return problems;
-
-}
 function doLoadQuestionsFromJson(questionsJson) {
 
     if ( !questionsJson ) {
-        return { isError: true, message: "Questions JSON is null/empty" };
+        return Promise.reject({ isError: true, message: "Questions JSON is null/empty" });
     }
 
-    try {
-        var parsedQuestions = JSON.parse(questionsJson);
-        // validate the json
-        if ( parsedQuestions && parsedQuestions.length > 0 ) {
-            // make sure each one is valid
-            var i;
-            var errorsFound = [];
-            for (i = 0; i < parsedQuestions.length; i++) {
-                var q = parsedQuestions[i];
-                var problems = validateQuestion(q);
-                if ( problems.length > 0 ) {
-                    // this is a bad question
-                    errorsFound.push("Invalid data for question ["+(i+1)+"] - "+problems.join("; "));
-                }
-            }
-            if ( errorsFound.length == 0 ) {
-                questions = parsedQuestions;
-                console.log("Successfully loaded a total of ["+questions.length+"] questions");
-                return { isError: false }
-            } else {
-                console.log("Encountered ["+errorsFound.length+"] problems while trying to load questions. ["+errorsFound+"]");
-                return { isError: true, errors: errorsFound}
-            }
+    var parsedQuestions = JSON.parse(questionsJson);
+    // validate the json
+    if ( !parsedQuestions || parsedQuestions.length == 0 ) {
+        return Promise.reject({ isError: true, message: "Could not load questions - "+e.message });
+    }
+        // make sure each one is valid
+    var errorsFound = [];
+    var promises = [];
+    for (var question in parsedQuestions) {
+        promises.push(questionValidator.validateQuestion(question)
+                        .catch(function(err){
+                            errorsFound.push("Invalid data for question ["+(i+1)+"] - "+problems.join("; "));
+                        }));
+    }
+
+    return Promise.all(promises)
+    .then(function(results){
+        if ( errorsFound.length !== 0 ) {
+            console.log("Encountered ["+errorsFound.length+"] problems while trying to load questions. ["+errorsFound+"]");
+            return Promise.reject({ isError: true, errors: errorsFound});
         }
-    } catch (e) {
-        console.error("Could not load questions from json ["+questionsJson+"] \n "+e);
-        return { isError: true, message: "Could not load questions - "+e.message };
-    }
 
+        questions = parsedQuestions;
+        console.log("Successfully loaded a total of ["+questions.length+"] questions");
+        return Promise.resolve({ isError: false });
+    });
 }
 
 exports.startQuiz = function() {
@@ -154,11 +132,9 @@ exports.generateTestData = function() {
 
     // TODO: make this waaaay better - actually make it more random and support dynamic question answer sizes!
     var totalQuestions = questions.length;
-    var i;
-    for (i = 1; i < 100; i++) {
+    for (var i = 1; i < 100; i++) {
         var name = "test-name-"+i;
-        var q;
-        for ( q = 1; q <= totalQuestions; q++) {
+        for (var q = 1; q <= totalQuestions; q++) {
             var answer = 1; // will be wrong for some questions
             if ( Math.floor(Math.random() * 2) === 1) {
                 answer = this.getAnswerForQuestion(q).answer; // actually get the answer
