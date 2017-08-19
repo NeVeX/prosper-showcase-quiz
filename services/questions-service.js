@@ -1,9 +1,6 @@
 var Promise = require('bluebird');
 var fs = Promise.promisifyAll(require("fs"));
 
-var container = require("./dependency/container");
-var questionValidator = container.questionValidator;
-
 var allPlayerScores = {};
 var answerStatistics = {};
 var questions = null;
@@ -14,7 +11,16 @@ var isQuizPaused = false;
 var isQuizStopped = true;
 var isQuizReady = false;
 
+
 loadQuestionsFromFile('config/questions.2017-08-18.json'); // default questions
+
+function QuestionsService(questionValidator, fileToLoad){
+    this.questionValidator = questionValidator;
+
+    if(fileToLoad){
+        loadQuestionsFromFile(fileToLoad); // default questions
+    }
+}
 
 function loadQuestionsFromFile(fileName) {
     return fs.readFileAsync(fileName)
@@ -29,7 +35,7 @@ function loadQuestionsFromFile(fileName) {
     });
 }
 
-exports.loadQuestionsFromJson = doLoadQuestionsFromJson;
+QuestionsService.prototype.loadQuestionsFromJson = doLoadQuestionsFromJson;
 
 function doLoadQuestionsFromJson(questionsJson) {
 
@@ -37,20 +43,25 @@ function doLoadQuestionsFromJson(questionsJson) {
         return Promise.reject({ isError: true, message: "Questions JSON is null/empty" });
     }
 
-    var parsedQuestions = JSON.parse(questionsJson);
-    // validate the json
-    if ( !parsedQuestions || parsedQuestions.length == 0 ) {
+    try{
+        var parsedQuestions = JSON.parse(questionsJson);
+        // validate the json
+        if ( !parsedQuestions || parsedQuestions.length == 0 ) {
+            return Promise.reject({ isError: true, message: "Could not load questions - no data found" });
+        }
+    } catch(e){
         return Promise.reject({ isError: true, message: "Could not load questions - "+e.message });
     }
         // make sure each one is valid
     var errorsFound = [];
     var promises = [];
-    for (var question in parsedQuestions) {
-        promises.push(questionValidator.validateQuestion(question)
-                        .catch(function(err){
-                            errorsFound.push("Invalid data for question ["+(i+1)+"] - "+problems.join("; "));
-                        }));
-    }
+    var validator = this.questionValidator;
+    promises = parsedQuestions.map(function(question){
+        return validator.validateQuestion(question)
+        .catch(function(err){
+            errorsFound.push("Invalid data for question ["+ JSON.stringify(question)+"] - " + err.message);
+        });
+    });
 
     return Promise.all(promises)
     .then(function(results){
@@ -65,7 +76,7 @@ function doLoadQuestionsFromJson(questionsJson) {
     });
 }
 
-exports.startQuiz = function() {
+QuestionsService.prototype.startQuiz = function() {
     allPlayerScores = {};
     answerStatistics = {};
     console.log("Started a new game");
@@ -74,7 +85,7 @@ exports.startQuiz = function() {
     return true;
 };
 
-exports.setCurrentQuestion = function(questionNumber) {
+QuestionsService.prototype.setCurrentQuestion = function(questionNumber) {
     if ( questionNumber === currentAnswersInUse) {
         console.log("No setting question to ["+questionNumber+"] since that is the current question in play");
         return false;
@@ -89,7 +100,7 @@ exports.setCurrentQuestion = function(questionNumber) {
     return false;
 };
 
-exports.getStatisticsForQuestion = function(questionNumber) {
+QuestionsService.prototype.getStatisticsForQuestion = function(questionNumber) {
     if ( ! getQuestion(questionNumber) ) {
         return { error: "Question number ["+questionNumber+"] is invalid"};
     }
@@ -128,7 +139,7 @@ exports.getStatisticsForQuestion = function(questionNumber) {
 
 };
 
-exports.generateTestData = function() {
+QuestionsService.prototype.generateTestData = function() {
 
     // TODO: make this waaaay better - actually make it more random and support dynamic question answer sizes!
     var totalQuestions = questions.length;
@@ -147,44 +158,46 @@ exports.generateTestData = function() {
     return true;
 };
 
-exports.getAnswerForQuestion = function(questionNumber) {
+QuestionsService.prototype.getAnswerForQuestion = function(questionNumber) {
     var question = getQuestion(questionNumber);
     if ( question ) {
         return { answer: question.correctAnswer}
     }
 };
 
-exports.changeAnswersLeftDown = function() {
+QuestionsService.prototype.changeAnswersLeftDown = function() {
     var answersInUse = currentAnswersInUse;
-    if ( answersInUse ) {
-        var newScoreAmount = getScoreAmountForAnswersLeft(answersInUse);
-        if ( answersInUse > 2 ) {
-            var previousScoreAmount = newScoreAmount;
-            --answersInUse;
-            newScoreAmount = getScoreAmountForAnswersLeft(answersInUse);
-            console.log("Changing scoreAmount from [" + previousScoreAmount + "] to [" + newScoreAmount + "]");
-            // Now set the score amount
-            currentAnswersInUse = answersInUse;
-        }
-        return newScoreAmount;
+    if ( !answersInUse ) {
+        return null;
     }
-    return null;
+
+    var newScoreAmount = getScoreAmountForAnswersLeft(answersInUse);
+    if ( answersInUse > 2 ) {
+        var previousScoreAmount = newScoreAmount;
+        --answersInUse;
+        newScoreAmount = getScoreAmountForAnswersLeft(answersInUse);
+        console.log("Changing scoreAmount from [" + previousScoreAmount + "] to [" + newScoreAmount + "]");
+        // Now set the score amount
+        currentAnswersInUse = answersInUse;
+    }
+    return newScoreAmount;
 };
 
-exports.pauseQuiz = function() {
+QuestionsService.prototype.pauseQuiz = function() {
     console.log("Paused the game at question ["+currentQuestionInUse+"]");
     isQuizPaused = true;
     return true;
 };
 
-exports.unPauseQuiz = function() {
-    if ( currentQuestionInUse && currentAnswersInUse) {
-        console.log("Un-Paused the game at question ["+currentQuestionInUse+"]");
-        isQuizPaused = false;
-        return true; // it's unpaused
+QuestionsService.prototype.unPauseQuiz = function() {
+    if ( !currentQuestionInUse || !currentAnswersInUse) {
+        console.log("Cannot Un-Paused the game since question in play is not set");
+        return false; // the data isn't correct, so do not un pause
     }
-    console.log("Cannot Un-Paused the game since question in play is not set");
-    return false; // the data isn't correct, so do not un pause
+
+    console.log("Un-Paused the game at question ["+currentQuestionInUse+"]");
+    isQuizPaused = false;
+    return true; // it's unpaused
 };
 
 function getScoreAmountForAnswersLeft(currentAnswersInUse) {
@@ -210,7 +223,7 @@ function getTotalAnswersForQuestion(question) {
     return 1; // only one answer? (shouldn't happen)
 }
 
-exports.stopQuiz = function() {
+QuestionsService.prototype.stopQuiz = function() {
     this.pauseQuiz();
     isQuizStopped = true;
     return isQuizStopped;
@@ -224,7 +237,7 @@ function getQuestion(number) {
     return null;
 }
 
-exports.getQuestionForNumber = function(questionNumber) {
+QuestionsService.prototype.getQuestionForNumber = function(questionNumber) {
     var foundQuestion = getQuestion(questionNumber);
     if ( foundQuestion ) {
         // Don't return the direct question object, create the response we want to send to the client
@@ -241,7 +254,7 @@ exports.getQuestionForNumber = function(questionNumber) {
     return null;
 };
 
-exports.recordPlayerAnswer = function(name, answer) {
+QuestionsService.prototype.recordPlayerAnswer = function(name, answer) {
     return recordPlayerAnswerWithGameState(name, answer, currentQuestionInUse, currentAnswersInUse);
 };
 
@@ -319,8 +332,24 @@ function updateStatistics(currentQuestion, answerGiven) {
     answerStatistics[currentQuestion].totalAnswers++; // increment the total answers given too
 }
 
-exports.getCurrentScores = function() {
+QuestionsService.prototype.getCurrentScores = function() {
     var returnScores = [];
+
+    /*
+    allPlayerScores.filter(function(player){ 
+        return allPlayerScores.hasOwnProperty(player); 
+    }).map(function(playerName){
+        return allPlayerScores[playerName];
+    }).filter(function(questionNumber){ 
+        return allPlayerScores[playerName].hasOwnProperty(questionNumber)
+    }).reduce(function(previousValue, currentValue){
+        previousValue += allPlayerScores[playerName][currentValue];
+    }, 0);
+    
+    returnScores.push({"name": playerName, "score": totalPlayerScore});
+    */
+
+    
     for ( var playerName in allPlayerScores ) {
         var totalPlayerScore = 0;
         if ( allPlayerScores.hasOwnProperty(playerName) ) {
@@ -332,5 +361,9 @@ exports.getCurrentScores = function() {
         }
         returnScores.push({"name": playerName, "score": totalPlayerScore});
     }
+    
     return returnScores;
 };
+
+
+module.exports = QuestionsService;
