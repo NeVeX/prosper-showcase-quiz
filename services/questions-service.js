@@ -12,6 +12,8 @@ var isQuizStopped = true;
 var isQuizReady = false;
 
 
+loadQuestionsFromFile('config/questions.2017-08-18.json'); // default questions
+
 function QuestionsService(questionValidator, fileToLoad){
     this.questionValidator = questionValidator;
 

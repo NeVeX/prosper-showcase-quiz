@@ -124,7 +124,7 @@ function showAllTheAnswers(questionNumber, data, howManyQuestionsInPlay, isMoreQ
 
 function startAllTheTimers(timeAllowedSeconds, howManyQuestionsInPlay, currentQuestion, isMoreQuestions) {
 
-    var timeForEachQuestionMs = ((timeAllowedSeconds * 0.62) / (howManyQuestionsInPlay-2)) * 1000;
+    var timeForEachQuestionMs = ((timeAllowedSeconds * 0.70) / (howManyQuestionsInPlay-2)) * 1000;
     console.log("Time (ms) allowed for each question: "+timeForEachQuestionMs);
 
     var timeLeft = timeAllowedSeconds;

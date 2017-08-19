@@ -49,6 +49,8 @@ SlackApi.prototype.slackInteractive = function (request, response) {
     }  
     
     if ( textEntered === 'stop') {
+        return response.status(200).json( { text: "Hurrah! You've registered. Note, all further interaction will be done in the slackbot channel, so go there!"} );
+    } 
         console.log("Player ["+name+"] has opted to stop playing in the the quiz");
         removeSlackUserFromQuiz(name);
         return response.status(200).json( { text: "You got it! I won't annoy you anymore with the quiz"} );
@@ -252,19 +254,23 @@ function setProfileInfoForUser(playerInfo) {
     function( error, httpResponse, body) {
         if (error) {
             console.log("There was an error trying to get the profile info for user Id ["+playerInfo.userId+"]: "+JSON.stringify(error));
-            return;
-        } 
-        if (!body ) {
-            return;
-        }
-
-        var parsedBody = JSON.parse(body);
-        if ( parsedBody && parsedBody.profile ) {
-            var firstName = parsedBody.profile.first_name;
-            var lastName = parsedBody.profile.last_name;
-            if (firstName && lastName) {
-                playerInfo.firstName = firstName;
-                playerInfo.lastName = lastName;
+        } else {
+            if ( body ) {
+                var parsedBody = JSON.parse(body);
+                if ( parsedBody && parsedBody.profile ) {
+                    var firstName = parsedBody.profile.first_name;
+                    var lastName = parsedBody.profile.last_name;
+                    if (firstName && lastName) {
+                        playerInfo.firstName = firstName;
+                        playerInfo.lastName = lastName;
+                        console.log("Got profile information for ["+playerInfo.userId+"] - ["+playerInfo.firstName+"] - ["+playerInfo.lastName+"]")
+                    }
+                } else {
+                    // Somethings this happens - but it shouldn't since slack gives the profile info for each user
+                    // It mainly happens during quizzes, so logging a message this time to investigate after the fact
+                    console.log("Could not get profile information for ["+playerInfo.userId+"] - ["+playerInfo.name+"]")
+                }
+                setPersonalChannelIdForUser(playerInfo);
             }
         }
         setPersonalChannelIdForUser(playerInfo);
