@@ -5,6 +5,12 @@ To play, this node app is shown on screen and simultaneously will accept slack c
 
 ##### Release Notes
 
+#### `1.7.0`
+
+* Added landing page help text for joining the quiz
+* Added new questions for the 8th of September quiz
+* Added `answerRemovals` array option to questions, so that questions can be removed in a better order (not randomly)
+
 #### `1.6.0`
 
 * Added questions for the 18th of August 2017 quiz

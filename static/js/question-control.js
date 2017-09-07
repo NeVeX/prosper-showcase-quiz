@@ -118,12 +118,13 @@ function showAllTheAnswers(questionNumber, data, howManyQuestionsInPlay, isMoreQ
         unPauseTheQuiz();
         // Reset everything from the previous round
         showAllAnswers();
-        startAllTheTimers(data.timeAllowedSeconds, howManyQuestionsInPlay, questionNumber, isMoreQuestions);
+        startAllTheTimers(data, howManyQuestionsInPlay, questionNumber, isMoreQuestions);
     });
 }
 
-function startAllTheTimers(timeAllowedSeconds, howManyQuestionsInPlay, currentQuestion, isMoreQuestions) {
+function startAllTheTimers(questionData, howManyQuestionsInPlay, currentQuestion, isMoreQuestions) {
 
+    var timeAllowedSeconds = questionData.timeAllowedSeconds;
     var timeForEachQuestionMs = ((timeAllowedSeconds * 0.70) / (howManyQuestionsInPlay-2)) * 1000;
     console.log("Time (ms) allowed for each question: "+timeForEachQuestionMs);
 
@@ -159,7 +160,7 @@ function startAllTheTimers(timeAllowedSeconds, howManyQuestionsInPlay, currentQu
         }
     }, 1000);
 
-    getAnswerToQuestionAndStartTimers(currentQuestion, howManyQuestionsInPlay, timeForEachQuestionMs);
+    getAnswerToQuestionAndStartTimers(questionData, currentQuestion, howManyQuestionsInPlay, timeForEachQuestionMs);
 }
 
 function sendQuestionToSlackUsers(questionNumber, onSuccessFunction) {
@@ -185,14 +186,14 @@ function sendQuestionToSlackUsers(questionNumber, onSuccessFunction) {
 }
 
 // TODO: Remove this duplicated code - merge it below
-function getAnswerToQuestionAndStartTimers(currentQuestion, howManyQuestionsInPlay, timeForEachQuestionMs) {
+function getAnswerToQuestionAndStartTimers(questionData, currentQuestion, howManyQuestionsInPlay, timeForEachQuestionMs) {
 
     $.ajax({
         type: "GET",
         headers: { "Quiz-Key" : quizMasterKey },
         url: "answers?number="+currentQuestion,
         success: function(data) {
-            startQuestionRemovalTimerUsingGivenCorrectAnswer(data.answer, howManyQuestionsInPlay, timeForEachQuestionMs);
+            startQuestionRemovalTimerUsingGivenCorrectAnswer(data.answer, howManyQuestionsInPlay, timeForEachQuestionMs, questionData);
         },
         error: function(error) {
             if ( quizMasterKey ) {
@@ -232,14 +233,24 @@ function getWordForNumber(number) {
     }
 }
 
-function startQuestionRemovalTimerUsingGivenCorrectAnswer(answerNumber, howManyQuestionsInPlay, timeForEachQuestionMs) {
+function startQuestionRemovalTimerUsingGivenCorrectAnswer(answerNumber, howManyQuestionsInPlay, timeForEachQuestionMs, questionData) {
 
     var answerNumbersThatCanBeRemoved = [];
-    var i;
-    for( i = 1; i <= 4; i++) {
-        if ( !(answerNumber === i) && i <= howManyQuestionsInPlay ) {
-            answerNumbersThatCanBeRemoved.push(i);
+    var randomizeAnswerRemoval = true;
+    if ( !questionData && !questionData.answerRemovals && questionData.answerRemovals.length == 0 ) {
+        // Let's randomly assign which answers to remove over time
+        var i;
+        for (i = 1; i <= 4; i++) {
+            if (!(answerNumber === i) && i <= howManyQuestionsInPlay) {
+                answerNumbersThatCanBeRemoved.push(i);
+            }
         }
+        console.log("Randomly calculated the answers to remove as: "+questionData.answerRemovals);
+    } else {
+        console.log("Using the provided answers to remove array: "+questionData.answerRemovals);
+        // Let's just use the given data instead of trying to randomize
+        answerNumbersThatCanBeRemoved = questionData.answerRemovals;
+        randomizeAnswerRemoval = false;
     }
 
     var fadeOutAnswerInterval = setInterval(function() {
@@ -248,9 +259,16 @@ function startQuestionRemovalTimerUsingGivenCorrectAnswer(answerNumber, howManyQ
             console.log("Only 2 or fewer questions remain - not fading anymore");
             return; // nothing to do
         }
-        // randomize!
-        var randomIndexToRemove = Math.floor(Math.random() * answerNumbersThatCanBeRemoved.length);
-        var answerNumberToMarkWrong = answerNumbersThatCanBeRemoved[randomIndexToRemove];
+        var answerNumberToMarkWrong;
+        if ( randomizeAnswerRemoval ) {
+            // randomize!
+            var randomIndexToRemove = Math.floor(Math.random() * answerNumbersThatCanBeRemoved.length);
+            answerNumberToMarkWrong = answerNumbersThatCanBeRemoved[randomIndexToRemove];
+        } else {
+            // just take the first element - it will be the "next" to mark as removable
+            answerNumberToMarkWrong = answerNumbersThatCanBeRemoved[0];
+        }
+
         console.log("Will mark answer div: "+answerNumberToMarkWrong+" as wrong");
         // $(itemDivId).animate({ opacity: 0 }); // fade it out, but keep the elements in tact (no fadeOut)
         reduceAnswerScoreAmount();

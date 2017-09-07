@@ -9,7 +9,7 @@ var currentAnswersInUse = null;
 var isQuizPaused = false;
 var isQuizStopped = true;
 
-loadQuestionsFromFile('config/questions.2017-08-18.json'); // default questions
+loadQuestionsFromFile('config/questions.2017-09-08.json'); // default questions
 
 function loadQuestionsFromFile(fileName) {
     var questionsJson = fs.readFileSync(fileName);
@@ -29,6 +29,15 @@ function validateQuestion(question) {
     if ( !question.correctAnswer || question.correctAnswer < 1 || question.correctAnswer > 4 ) {
         problems.push("There is no valid correct answer");
     }
+
+    // the "answerRemovals" is optional at the moment
+    if ( question.answerRemovals && question.answerRemovals.length > 0 ) {
+        // make sure correct answer is not within it
+        if ( question.answerRemovals.indexOf(question.correctAnswer) > -1 ) {
+            problems.push("The answerRemovals ["+question.answerRemovals+"] contains the correct answer ["+question.correctAnswer+"]")
+        }
+    }
+
     if ( !question.timeAllowedSeconds || question.timeAllowedSeconds < 1) {
         problems.push("The time allowed in seconds is not valid");
     }
@@ -259,6 +268,7 @@ exports.getQuestionForNumber = function(questionNumber) {
             answerThree: foundQuestion.answerThree,
             answerFour: foundQuestion.answerFour,
             timeAllowedSeconds: foundQuestion.timeAllowedSeconds,
+            answerRemovals: foundQuestion.answerRemovals,
             totalQuestions: questions.length // Add the total questions in this quiz
         };
     }
