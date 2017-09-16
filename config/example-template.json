@@ -6,6 +6,7 @@
     "answerThree": "Answer three",
     "answerFour": "Answer four",
     "correctAnswer": 3,
+    "answerRemovals": [4,2,1],
     "timeAllowedSeconds": 22
   },
   {
@@ -15,6 +16,7 @@
     "answerThree": "Answer three",
     "answerFour": "Answer four",
     "correctAnswer": 1,
+    "answerRemovals": [2,4,3],
     "timeAllowedSeconds": 22
   },
   {
@@ -24,6 +26,7 @@
     "answerThree": "answer_three_text",
     "answerFour": "answer_four_text",
     "correctAnswer": 3,
+    "answerRemovals": [1,4,2],
     "timeAllowedSeconds": 18
   }
 ]
