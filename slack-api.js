@@ -66,7 +66,7 @@ exports.slackInteractive = function (request, response) {
     }
     else {
         // We don't support answer via "/quiz 1" (as example) anymore - so we remove it
-        return response.status(422).json( { text: "Hmm, I don't understand what you are trying to do. Enter '/quiz` to see the available commands. Note '/quiz {number}` has been removed"} );
+        return response.status(200).json( { text: "Hmm, I don't understand what you are trying to do. Enter '/quiz` to see the available commands. Note '/quiz {number}` has been removed"} );
     }
 };
 
@@ -147,14 +147,18 @@ exports.sendNewQuestionToSlackUsers = function (questionInformation) {
     }
     randomizedUsers = shuffle(randomizedUsers); // shuffle all of them
 
-    for ( var userName in randomizedUsers ) {
-        // Get the url to post to
-        var personalChannelId = slackUserInfo[userName].personalChannelId;
-        var wantsToPlayInteractively = slackUserInfo[userName].wantsToPlayInteractively;
-        if ( !personalChannelId || !wantsToPlayInteractively ) {
-            continue; // don't annoy this person
+    for ( var randomUserIndex = 0; randomUserIndex < randomizedUsers.length; randomUserIndex++ ) {
+        var slackUserName = randomizedUsers[randomUserIndex];
+        if ( slackUserInfo.hasOwnProperty(slackUserName)) {
+            var slackUser = slackUserInfo[slackUserName];
+            // Get the url to post to
+            var personalChannelId = slackUser.personalChannelId;
+            var wantsToPlayInteractively = slackUser.wantsToPlayInteractively;
+            if ( !personalChannelId || !wantsToPlayInteractively ) {
+                continue; // don't annoy this person
+            }
+            sendMessageToSlack(slackUser.slackPersonalChannelName, slackQuestion, slackAttachments)
         }
-        sendMessageToSlack(slackUserInfo[userName].slackPersonalChannelName, slackQuestion, slackAttachments)
     }
 };
 
@@ -175,7 +179,6 @@ function shuffle(array) {
     }
     return array;
 }
-
 
 function checkSlackRequestAuthentication(token, response) {
     if ( token && token == QUIZ_SLACK_TOKEN ) {

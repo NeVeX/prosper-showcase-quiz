@@ -1,23 +1,23 @@
 [
   {
-    "question": "This is question one?",
-    "answerOne": "Answer one",
-    "answerTwo": "Answer two",
-    "answerThree": "Answer three",
-    "answerFour": "Answer four",
+    "question": "question_text",
+    "answerOne": "answer_one_text",
+    "answerTwo": "answer_two_text",
+    "answerThree": "answer_three_text",
+    "answerFour": "answer_four_text",
     "correctAnswer": 3,
-    "answerRemovals": [4,2,1],
-    "timeAllowedSeconds": 22
-  },
+    "answerRemovals": [1,4,2],
+    "timeAllowedSeconds": 18
+  }
   {
-    "question": "This is question two?",
-    "answerOne": "Answer one",
-    "answerTwo": "Answer two",
-    "answerThree": "Answer three",
-    "answerFour": "Answer four",
-    "correctAnswer": 1,
-    "answerRemovals": [2,4,3],
-    "timeAllowedSeconds": 22
+    "question": "question_text",
+    "answerOne": "answer_one_text",
+    "answerTwo": "answer_two_text",
+    "answerThree": "answer_three_text",
+    "answerFour": "answer_four_text",
+    "correctAnswer": 3,
+    "answerRemovals": [1,4,2],
+    "timeAllowedSeconds": 18
   },
   {
     "question": "question_text",

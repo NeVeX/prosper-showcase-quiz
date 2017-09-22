@@ -1,9 +1,11 @@
 
 var questionsService = require('./questions-service');
+var slackApi = require('./slack-api');
 
 exports.generateTestData = function (request, response) {
     console.log("New POST request received to /prosperquiz/test/data");
     if ( request.nevex.isQuizMaster ) {
+        var testUserNames = slackApi.generateTestUsers();
         var didGenerateData = questionsService.generateTestData();
         return response.status(200).json({"didGenerateData": didGenerateData});
     } else {

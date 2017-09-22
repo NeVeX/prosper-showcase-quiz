@@ -25,6 +25,6 @@ function stopCheckForRegisteredPlayers() {
 }
 
 function onError(error) {
-    console.log("Error occurred: "+error);
+    console.log("An error occurred getting player registrations info: "+error);
 }
 
