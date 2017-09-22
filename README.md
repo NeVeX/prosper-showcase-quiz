@@ -5,6 +5,16 @@ To play, this node app is shown on screen and simultaneously will accept slack c
 
 ##### Release Notes
 
+#### `1.8.0`
+
+* Removing the `/quiz [number]` API for answering - people can get an unfair advantage (slack interactive messages can lag behind)
+  * Randomized the order of sending slack messages (makes it fairer - since before, people who register first, may get the questions sent to them first)
+* Added new API to get the total number of people registered 
+  * New `players.js` script to help retrieve the data
+  * Added it to the landing and questions pages (informational)
+* Added questions that was used in the quiz on September 22nd 2017
+* Slightly increased the read time of the questions before the answers can show
+
 #### `1.7.0`
 
 * Added landing page help text for joining the quiz
