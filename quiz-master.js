@@ -97,6 +97,14 @@ exports.getStatisticsForQuestion = function (request, response) {
     }
 };
 
+exports.getTotalPlayersRegistered = function (request, response) {
+    var totalAmountOfRegisteredPlayers = slackApi.getTotalPlayersRegistered();
+    if ( !totalAmountOfRegisteredPlayers ) {
+        totalAmountOfRegisteredPlayers = 0;
+    }
+    return response.status(200).json( { total_registered_players: totalAmountOfRegisteredPlayers })
+};
+
 function checkIsQuizMasterKeyCorrect(request) {
     var quizMasterKey = request.get(QUIZ_KEY_HEADER);
     return quizMasterKey && QUIZ_MASTER_KEY === quizMasterKey;

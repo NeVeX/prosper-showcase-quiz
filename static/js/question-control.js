@@ -42,7 +42,12 @@ function init() {
     if ( startQuestion === 1) {
         startNewQuiz(); // only start new quiz on question 1
     }
+    setupCheckForRegisteredPlayers(onUpdatedPlayersRegisteredAmount);
     getQuestion(startQuestion);
+}
+
+function onUpdatedPlayersRegisteredAmount(amount) {
+    $(PLAYERS_REGISTERED_ID).text(amount);
 }
 
 function startNewQuiz() {
@@ -517,7 +522,6 @@ function unPauseTheQuiz() {
     });
 }
 
-
 function getParameterByName(sParam) {
     var sPageURL = decodeURIComponent(window.location.search.substring(1)),
         sURLVariables = sPageURL.split('&'),
@@ -535,7 +539,7 @@ function getParameterByName(sParam) {
 
 function onGameOver() {
     console.log("GAME OVER");
-
+    stopCheckForRegisteredPlayers();
     $("#question-text").html("Quiz Over!<br>Now calculating the results...");
     fadeAllAnswerDivsToOpacityZero();
     $("#help-text-div").hide();
@@ -613,3 +617,4 @@ function onError(error) {
     console.log("Error occurred: "+error);
     alert("An error occurred! Lol!");
 }
+

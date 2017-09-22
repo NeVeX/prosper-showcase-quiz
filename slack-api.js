@@ -18,6 +18,16 @@ var request = require('request');
 
 var slackUserInfo = {};
 
+exports.getTotalPlayersRegistered = function () {
+    var count = 0;
+    for ( var slackName in slackUserInfo ) {
+        if (slackUserInfo.hasOwnProperty(slackName)) {
+            count++;
+        }
+    }
+    return count;
+};
+
 exports.slackInteractive = function (request, response) {
     var token = request.body.token;
 
@@ -55,13 +65,32 @@ exports.slackInteractive = function (request, response) {
         return response.status(200).json( { text: "You got it! I won't annoy you anymore with the quiz"} );
     }
     else {
-        addSlackNonInteractiveUserIfNotFound(name, userId, slashCommandChannelId);
-        // We'll just treat this like they are answering normally (i.e. /quiz 2)
-        return recordSlackAnswer(name, textEntered, response);
+        // We don't support answer via "/quiz 1" (as example) anymore - so we remove it
+        return response.status(422).json( { text: "Hmm, I don't understand what you are trying to do. Enter '/quiz` to see the available commands. Note '/quiz {number}` has been removed"} );
     }
 };
 
+exports.slackInteractiveAnswer = function (request, response) {
+    /**
+     * Slack gives the request body as a single x-www-url-encoded key called "payload" that contains
+     * JSON that's also encoded - so it's a bit fucked
+     * So here I just rely on JSON library to parse and handle the encoding (escaping) madness
+     */
+    var stringifyBody = JSON.stringify(request.body);
+    var parsedJson = JSON.parse(stringifyBody);
+    var data = JSON.parse(parsedJson.payload);
 
+    var token = data.token;
+    var authResponse = checkSlackRequestAuthentication(token, response);
+    if ( authResponse ) {
+        return;
+    }
+
+    var name = data.user.name;
+    var answerNumber = data.actions[0].value;
+    return recordSlackAnswer(name, answerNumber, response);
+
+};
 
 exports.sendNewQuestionToSlackUsers = function (questionInformation) {
     console.log("Sending new question to slack users");
@@ -109,19 +138,44 @@ exports.sendNewQuestionToSlackUsers = function (questionInformation) {
             actions: availableActions
         }];
 
+    // randomize the sending - get all users first
+    var randomizedUsers = [];
     for ( var slackName in slackUserInfo ) {
         if (slackUserInfo.hasOwnProperty(slackName)) {
-            // Get the url to post to
-            var personalChannelId = slackUserInfo[slackName].personalChannelId;
-            var wantsToPlayInteractively = slackUserInfo[slackName].wantsToPlayInteractively;
-            if ( !personalChannelId || !wantsToPlayInteractively ) {
-                continue; // don't annoy this person
-            }
-
-            sendMessageToSlack(slackUserInfo[slackName].slackPersonalChannelName, slackQuestion, slackAttachments)
+            randomizedUsers.push(slackName);
         }
     }
+    randomizedUsers = shuffle(randomizedUsers); // shuffle all of them
+
+    for ( var userName in randomizedUsers ) {
+        // Get the url to post to
+        var personalChannelId = slackUserInfo[userName].personalChannelId;
+        var wantsToPlayInteractively = slackUserInfo[userName].wantsToPlayInteractively;
+        if ( !personalChannelId || !wantsToPlayInteractively ) {
+            continue; // don't annoy this person
+        }
+        sendMessageToSlack(slackUserInfo[userName].slackPersonalChannelName, slackQuestion, slackAttachments)
+    }
 };
+
+// https://bost.ocks.org/mike/shuffle/
+function shuffle(array) {
+    var m = array.length, t, i;
+
+    // While there remain elements to shuffle…
+    while (m) {
+
+        // Pick a remaining element…
+        i = Math.floor(Math.random() * m--);
+
+        // And swap it with the current element.
+        t = array[m];
+        array[m] = array[i];
+        array[i] = t;
+    }
+    return array;
+}
+
 
 function checkSlackRequestAuthentication(token, response) {
     if ( token && token == QUIZ_SLACK_TOKEN ) {
@@ -158,13 +212,6 @@ function recordSlackAnswer(name, answer, response) {
     }
 }
 
-function addSlackNonInteractiveUserIfNotFound(name, userId, slashCommandChannelId) {
-    if ( !(name in slackUserInfo) ) {
-        // we don't have this user - so let's add him
-        addSlackUserInfo(name, false, userId, slashCommandChannelId); // set interactivity to false
-    }
-}
-
 function addSlackUserInfo(name, wantsToPlayInteractively, userId, slashCommandChannelId) {
     if ( !(name in slackUserInfo) ) {
         slackUserInfo[name] = {};
@@ -197,7 +244,6 @@ function unregisterAllSlackUsersFromQuiz() {
         }
     }
 }
-
 
 function setPersonalChannelIdForUser(playerInfo) {
     console.log("Getting personal IM channel for player user id ["+playerInfo.userId+"]");
@@ -266,28 +312,6 @@ function setProfileInfoForUser(playerInfo) {
         }
     });
 }
-
-exports.slackInteractiveAnswer = function (request, response) {
-    /**
-     * Slack gives the request body as a single x-www-url-encoded key called "payload" that contains
-     * JSON that's also encoded - so it's a bit fucked
-     * So here I just rely on JSON library to parse and handle the encoding (escaping) madness
-     */
-    var stringifyBody = JSON.stringify(request.body);
-    var parsedJson = JSON.parse(stringifyBody);
-    var data = JSON.parse(parsedJson.payload);
-
-    var token = data.token;
-    var authResponse = checkSlackRequestAuthentication(token, response);
-    if ( authResponse ) {
-        return;
-    }
-
-    var name = data.user.name;
-    var answerNumber = data.actions[0].value;
-    return recordSlackAnswer(name, answerNumber, response);
-
-};
 
 exports.updateCurrentScoresWithUserInfo = function (currentScores) {
     console.log("Updating current scores with more user info");
@@ -378,7 +402,6 @@ function sendMessageToSlack(channelId, message, attachments) {
         }
     );
 }
-
 
 function isNumber(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);

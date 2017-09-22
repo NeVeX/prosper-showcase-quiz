@@ -56,5 +56,8 @@
     font-weight: 800;
 
     text-shadow: 1px 1px 0 black, 1px -1px 0 black, -1px 1px 0 black, -1px -1px 0 black;
+}
 
+.players-registered {
+    margin-top: 2em;
 }
