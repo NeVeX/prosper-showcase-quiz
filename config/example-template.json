@@ -8,7 +8,7 @@
     "correctAnswer": 3,
     "answerRemovals": [1,4,2],
     "timeAllowedSeconds": 18
-  }
+  },
   {
     "question": "question_text",
     "answerOne": "answer_one_text",

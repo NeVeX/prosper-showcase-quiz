@@ -5,6 +5,10 @@ To play, this node app is shown on screen and simultaneously will accept slack c
 
 ##### Release Notes
 
+#### `1.9.0`
+
+* Added questions that were used in the quiz on October 6th 2017
+
 #### `1.8.0`
 
 * Removing the `/quiz [number]` API for answering - people can get an unfair advantage (slack interactive messages can lag behind)
