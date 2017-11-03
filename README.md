@@ -5,6 +5,10 @@ To play, this node app is shown on screen and simultaneously will accept slack c
 
 ##### Release Notes
 
+#### `1.9.2`
+
+* Added questions that were used in the quiz on November 3rd 2017
+
 #### `1.9.1`
 
 * Added questions that were used in the quiz on October 27th 2017
