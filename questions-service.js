@@ -9,7 +9,9 @@ var currentAnswersInUse = null;
 var isQuizPaused = false;
 var isQuizStopped = true;
 
-loadQuestionsFromFile('config/questions.2017-12-15.json'); // default questions
+var defaultQuestionsJson = 'config/questions.2018-02-23.json'; // default questions
+console.log("Will load the default questions using file: "+defaultQuestionsJson);
+loadQuestionsFromFile(defaultQuestionsJson);
 
 function loadQuestionsFromFile(fileName) {
     var questionsJson = fs.readFileSync(fileName);

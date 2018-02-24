@@ -7,7 +7,7 @@
     "answerFour": "answer_four_text",
     "correctAnswer": 3,
     "answerRemovals": [1,4,2],
-    "timeAllowedSeconds": 18
+    "timeAllowedSeconds": 14
   },
   {
     "question": "question_text",
@@ -17,7 +17,7 @@
     "answerFour": "answer_four_text",
     "correctAnswer": 3,
     "answerRemovals": [1,4,2],
-    "timeAllowedSeconds": 18
+    "timeAllowedSeconds": 14
   },
   {
     "question": "question_text",
@@ -27,6 +27,6 @@
     "answerFour": "answer_four_text",
     "correctAnswer": 3,
     "answerRemovals": [1,4,2],
-    "timeAllowedSeconds": 18
+    "timeAllowedSeconds": 14
   }
 ]
