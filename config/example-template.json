@@ -1,6 +1,6 @@
 [
   {
-    "question": "question_text",
+    "question": "question_one_text",
     "answerOne": "answer_one_text",
     "answerTwo": "answer_two_text",
     "answerThree": "answer_three_text",
@@ -10,23 +10,13 @@
     "timeAllowedSeconds": 14
   },
   {
-    "question": "question_text",
+    "question": "question_two_text",
     "answerOne": "answer_one_text",
     "answerTwo": "answer_two_text",
     "answerThree": "answer_three_text",
     "answerFour": "answer_four_text",
-    "correctAnswer": 3,
-    "answerRemovals": [1,4,2],
-    "timeAllowedSeconds": 14
-  },
-  {
-    "question": "question_text",
-    "answerOne": "answer_one_text",
-    "answerTwo": "answer_two_text",
-    "answerThree": "answer_three_text",
-    "answerFour": "answer_four_text",
-    "correctAnswer": 3,
-    "answerRemovals": [1,4,2],
-    "timeAllowedSeconds": 14
+    "correctAnswer": 1,
+    "answerRemovals": [2,4,3],
+    "timeAllowedSeconds": 12
   }
 ]
