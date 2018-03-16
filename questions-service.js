@@ -1,5 +1,9 @@
 var fs = require('fs');
 
+const SCORE_HIGH = 5;
+const SCORE_MEDIUM = 3;
+const SCORE_LOW = 1;
+
 var allPlayerScores = {};
 var answerStatistics = {};
 var questions = null;
@@ -9,7 +13,7 @@ var currentAnswersInUse = null;
 var isQuizPaused = false;
 var isQuizStopped = true;
 
-var defaultQuestionsJson = 'config/questions.2018-03-02.json'; // default questions
+var defaultQuestionsJson = 'config/questions.2018-03-09.json'; // default questions
 console.log("Will load the default questions using file: "+defaultQuestionsJson);
 loadQuestionsFromFile(defaultQuestionsJson);
 
@@ -225,11 +229,11 @@ exports.unPauseQuiz = function() {
 function getScoreAmountForAnswersLeft(currentAnswersInUse) {
     if ( currentAnswersInUse && currentAnswersInUse > 0 ) {
         if ( currentAnswersInUse === 4 ) {
-            return 5; // there's four questions in play
+            return SCORE_HIGH; // there's four questions in play
         } else if ( currentAnswersInUse === 3 ) {
-            return 3; // there's three questions in play
+            return SCORE_MEDIUM; // there's three questions in play
         }
-        return 1; // default
+        return SCORE_LOW; // default
      }
      return 0; // hmmm...
 }
@@ -312,7 +316,7 @@ function recordPlayerAnswerWithGameState(name, answerGiven, questionInPlay, answ
     if ( isAnswerCorrect ) {
         allPlayerScores[name][questionInPlay] = scoreAmount; // Give them the score
     } else {
-        allPlayerScores[name][questionInPlay] = 0; // Give them nothing
+        allPlayerScores[name][questionInPlay] = (scoreAmount * -1); // Negative scoring
     }
 
     if ( answerGiven > 0 && answerGiven <= getTotalAnswersForQuestion(currentQuestion) ) {
@@ -324,7 +328,6 @@ function recordPlayerAnswerWithGameState(name, answerGiven, questionInPlay, answ
             allPlayerScores[name][questionInPlay] += bonusScoreToAdd;
         }
     }
-
     return { currentQuestion: questionInPlay};
 }
 
@@ -333,7 +336,8 @@ function getScoreForFastestCorrectAnswer(questionNumber, answersInUse, playerNam
     if ( answerStatistics[questionNumber] && !answerStatistics[questionNumber].fastestPlayerToCorrectlyAnswer) {
         answerStatistics[questionNumber].fastestPlayerToCorrectlyAnswer = playerName;
         // The bonus will be equal to the current top score amount in play
-        var bonusScore = getScoreAmountForAnswersLeft(answersInUse);
+        // var bonusScore = getScoreAmountForAnswersLeft(answersInUse);
+        var bonusScore = SCORE_MEDIUM; // static default now
         console.log("Player ["+playerName+"] will get a bonus score of ["+bonusScore+"] for answering the fastest");
         return bonusScore;
     }

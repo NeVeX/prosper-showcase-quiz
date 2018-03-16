@@ -2,10 +2,10 @@ $( document ).ready(function() {
     init();
 });
 
-var QUESTION_SHOWN_WITHOUT_ANSWERS_PER_CHARACTER_SIZE = 15;
-var CORRECT_ANSWER_SHOWN_TIME_MS = 3000;
+var QUESTION_SHOWN_WITHOUT_ANSWERS_PER_CHARACTER_SIZE = 18;
+var CORRECT_ANSWER_SHOWN_TIME_MS = 3500;
 var SHOW_GAME_OVER_TIME_MS = 5500;
-var SHOW_STATS_TIME_MS = 6000;
+var SHOW_STATS_TIME_MS = 6500;
 var ANSWER_WRONG_CLASS_NAME = "answer-wrong";
 var ANSWER_RIGHT_CLASS_NAME = "answer-right";
 
@@ -109,7 +109,7 @@ function onQuizDataReturned(questionNumber, data) {
     var isMoreQuestions = questionNumber < data.totalQuestions;
 
     // determine the dynamic read speed (roughly)
-    var timeToWaitMs = 1000;
+    var timeToWaitMs = 1200;
     if ( data.question.length > QUESTION_SHOWN_WITHOUT_ANSWERS_PER_CHARACTER_SIZE) {
         timeToWaitMs = (data.question.length / QUESTION_SHOWN_WITHOUT_ANSWERS_PER_CHARACTER_SIZE) * 1000;
     }
@@ -600,7 +600,8 @@ function onScoresReturned(scores) {
         } else {
             var keys = Object.keys(scoresAsKey);
             var i;
-            keys.reverse();
+            // keys.reverse(); - does a lexicographical, which when using negative numbers, makes this go out of whack
+            keys.sort( function(a,b) { return b - a; }); // sort in reverse order (highest number first)
             var scoresHtml = "";
             for (i = 0; i < keys.length; i++) {
                 var k = keys[i];
