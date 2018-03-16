@@ -5,6 +5,13 @@ To play, this node app is shown on screen and simultaneously will accept slack c
 
 ##### Release Notes
 
+#### `1.10.0`
+
+* Implemented negative scoring
+* Reduced the bonus score to 3
+* Allowed for more time on the questions/answers (dynamically done)
+* Fixed sort bug in the final scores screen
+
 #### `1.9.2`
 
 * Added questions that were used in the quiz on November 3rd 2017
