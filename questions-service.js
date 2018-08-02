@@ -13,7 +13,7 @@ var currentAnswersInUse = null;
 var isQuizPaused = false;
 var isQuizStopped = true;
 
-var defaultQuestionsJson = 'config/questions.2018-03-09.json'; // default questions
+var defaultQuestionsJson = 'config/questions.2018-03-16.json'; // default questions
 console.log("Will load the default questions using file: "+defaultQuestionsJson);
 loadQuestionsFromFile(defaultQuestionsJson);
 
