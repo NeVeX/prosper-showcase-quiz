@@ -5,6 +5,10 @@ To play, this node app is shown on screen and simultaneously will accept slack c
 
 ##### Release Notes
 
+#### `1.12.0`
+
+* Added toggle to enable/disable bonus points awarded to the 1st person to answer correctly
+
 #### `1.11.0`
 
 * Implemented negative scoring

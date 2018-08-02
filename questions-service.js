@@ -3,6 +3,9 @@ var fs = require('fs');
 const SCORE_HIGH = 5;
 const SCORE_MEDIUM = 3;
 const SCORE_LOW = 1;
+const FASTEST_SCORE_BONUS_ENABLED = false;
+
+console.log("Fastest bonus score enabled? "+FASTEST_SCORE_BONUS_ENABLED);
 
 var allPlayerScores = {};
 var answerStatistics = {};
@@ -331,7 +334,12 @@ function recordPlayerAnswerWithGameState(name, answerGiven, questionInPlay, answ
     return { currentQuestion: questionInPlay};
 }
 
+// gets a bonus score for the first answer to the questions. Non-fastest answers, will get 0 bonus scores
+// This can also be disabled, returning 0 for all requests.
 function getScoreForFastestCorrectAnswer(questionNumber, answersInUse, playerName) {
+    if ( !FASTEST_SCORE_BONUS_ENABLED ) {
+        return 0; // no bonus scores for this quiz
+    }
     // Only get a bonus score if the current question does not have a fastest player added already
     if ( answerStatistics[questionNumber] && !answerStatistics[questionNumber].fastestPlayerToCorrectlyAnswer) {
         answerStatistics[questionNumber].fastestPlayerToCorrectlyAnswer = playerName;
