@@ -335,17 +335,12 @@ function recordPlayerAnswerWithGameState(name, answerGiven, questionInPlay, answ
 }
 
 // gets a bonus score for the first answer to the questions. Non-fastest answers, will get 0 bonus scores
-// This can also be disabled, returning 0 for all requests.
 function getScoreForFastestCorrectAnswer(questionNumber, answersInUse, playerName) {
-    if ( !FASTEST_SCORE_BONUS_ENABLED ) {
-        return 0; // no bonus scores for this quiz
-    }
     // Only get a bonus score if the current question does not have a fastest player added already
     if ( answerStatistics[questionNumber] && !answerStatistics[questionNumber].fastestPlayerToCorrectlyAnswer) {
-        answerStatistics[questionNumber].fastestPlayerToCorrectlyAnswer = playerName;
+        answerStatistics[questionNumber].fastestPlayerToCorrectlyAnswer = playerName; // even if the bonus score is not granted, we still capture bragging rights
         // The bonus will be equal to the current top score amount in play
-        // var bonusScore = getScoreAmountForAnswersLeft(answersInUse);
-        var bonusScore = SCORE_MEDIUM; // static default now
+        var bonusScore = FASTEST_SCORE_BONUS_ENABLED ? SCORE_MEDIUM : 0; // only give a bonus score if enabled
         console.log("Player ["+playerName+"] will get a bonus score of ["+bonusScore+"] for answering the fastest");
         return bonusScore;
     }
